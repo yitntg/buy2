@@ -92,9 +92,9 @@ const ProductsPage = () => {
   const filteredProducts = () => {
     let filtered = [...products];
     
-    // 分类过滤
+    // 分类过滤（用字符串比较，防止类型不一致）
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => product.category_id === selectedCategory);
+      filtered = filtered.filter(product => String(product.category_id) === String(selectedCategory));
     }
     
     // 价格区间过滤
