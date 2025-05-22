@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaFilter, FaSort, FaChevronDown, FaChevronUp, FaTimes } from 'react-icons/fa';
 import ProductCard from '@/app/components/ProductCard';
+import { supabase } from '@/app/lib/supabase';
+import { Product } from '@/app/lib/types';
 
 // 模拟分类数据
 const categories = [
@@ -17,49 +19,10 @@ const categories = [
   { id: 'accessories', name: '配饰' }
 ];
 
-// 模拟产品数据
-// 每个分类生成2个产品，总共12个产品
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  original_price?: number;
-  image_url: string;
-  category_id: string;
-  is_featured: boolean;
-  is_new: boolean;
-  stock_quantity: number;
-  created_at: string;
-  updated_at: string;
-}
-
-const mockProducts: Product[] = [];
-
-// 为每个分类生成固定数量的产品
-categories.filter(cat => cat.id !== 'all').forEach((category, categoryIndex) => {
-  for (let i = 0; i < 2; i++) {
-    const productIndex = categoryIndex * 2 + i;
-    mockProducts.push({
-      id: `product-${productIndex + 1}`,
-      name: `${category.name} 商品 ${i + 1}`,
-      description: '这是一个非常棒的商品，质量上乘，设计精美。',
-      price: 199 + productIndex * 50,
-      original_price: i % 2 === 0 ? 299 + productIndex * 50 : undefined,
-      image_url: `https://picsum.photos/600/800?random=${productIndex + 20}`,
-      category_id: category.id,
-      is_featured: productIndex % 5 === 0,
-      is_new: productIndex % 4 === 0,
-      stock_quantity: 10 + productIndex,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-  }
-});
-
 const ProductsPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [products, setProducts] = useState<Product[]>([]);
   
   // 添加状态管理
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -79,6 +42,17 @@ const ProductsPage = () => {
       setSelectedCategory(categoryFromUrl);
     }
   }, [searchParams]);
+  
+  // 拉取真实商品数据
+  useEffect(() => {
+    async function fetchProducts() {
+      const { data, error } = await supabase.from('products').select('*');
+      if (!error && data) {
+        setProducts(data);
+      }
+    }
+    fetchProducts();
+  }, []);
   
   // 更新URL参数
   const updateUrlParams = (category: string) => {
@@ -117,7 +91,7 @@ const ProductsPage = () => {
   
   // 过滤并排序产品
   const filteredProducts = () => {
-    let filtered = [...mockProducts];
+    let filtered = [...products];
     
     // 分类过滤
     if (selectedCategory !== 'all') {
