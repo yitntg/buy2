@@ -231,7 +231,11 @@ const Navbar = () => {
                 </Link>
                 
                 {isProductsMenuOpen && (
-                  <div className="absolute left-0 mt-2 w-[800px] bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 animate-fade-in">
+                  <div 
+                    className="absolute left-0 mt-2 w-[800px] bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 animate-fade-in"
+                    onMouseEnter={() => setIsProductsMenuOpen(true)}
+                    onMouseLeave={() => setIsProductsMenuOpen(false)}
+                  >
                     <div className="grid grid-cols-5 gap-4 p-6">
                       {categories.map(category => (
                         <div 
@@ -266,7 +270,11 @@ const Navbar = () => {
                       ))}
                     </div>
                     {activeCategory && (
-                      <div className="absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 p-6 animate-fade-in">
+                      <div 
+                        className="absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 p-6 animate-fade-in"
+                        onMouseEnter={() => setActiveCategory(activeCategory)}
+                        onMouseLeave={() => setActiveCategory(null)}
+                      >
                         <div className="flex">
                           <div className="w-1/3">
                             <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
