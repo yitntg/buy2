@@ -11,6 +11,12 @@ import { Address, PaymentMethod } from '@/app/lib/types';
 // 模拟支付方式
 const paymentMethods: PaymentMethod[] = [
   {
+    id: 'airwallex',
+    name: 'Airwallex支付',
+    icon: 'A',
+    description: '使用Airwallex安全支付（推荐）'
+  },
+  {
     id: 'alipay',
     name: '支付宝',
     icon: '支',
@@ -136,10 +142,17 @@ const CheckoutPage = () => {
       // 生成订单ID
       const newOrderId = `ORD${Date.now().toString().slice(-8)}`;
       setOrderId(newOrderId);
-      setOrderComplete(true);
       
-      // 清空购物车
-      clearCart();
+      // 根据支付方式进行不同处理
+      if (selectedPaymentMethod === 'airwallex') {
+        // 使用Airwallex支付，跳转到支付页面
+        router.push(`/payment?orderId=${newOrderId}&amount=${total}&currency=CNY`);
+      } else {
+        // 其他支付方式
+        setOrderComplete(true);
+        // 清空购物车
+        clearCart();
+      }
     } catch (error) {
       console.error('下单失败:', error);
     } finally {
