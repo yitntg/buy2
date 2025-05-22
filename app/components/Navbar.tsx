@@ -8,6 +8,15 @@ import { useCartStore, useWishlistStore } from '@/app/lib/store';
 import { supabase } from '@/app/lib/supabase';
 import { User } from '@supabase/supabase-js';
 
+// 模拟用户数据 - 用于测试，与AccountPage中保持一致
+const mockUser = {
+  id: 'test-user-id',
+  email: 'test@example.com',
+  user_metadata: {
+    full_name: '测试用户'
+  }
+};
+
 const Navbar = () => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -38,6 +47,12 @@ const Navbar = () => {
 
   // 获取用户认证状态
   useEffect(() => {
+    // ===== 测试模式：使用模拟用户数据 =====
+    setUser(mockUser as any);
+    setLoading(false);
+    
+    // ===== 原始认证代码（暂时注释) =====
+    /*
     const getUser = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -61,9 +76,10 @@ const Navbar = () => {
     return () => {
       subscription.unsubscribe();
     };
+    */
   }, []);
 
-  // 关闭导航栏项的列表
+  // 导航栏项的列表
   const navLinks = [
     { href: '/', label: '首页' },
     { href: '/products', label: '全部商品' },
@@ -73,6 +89,12 @@ const Navbar = () => {
   ];
 
   const handleSignOut = async () => {
+    // 测试模式：简单重定向到首页
+    router.push('/');
+    setIsUserMenuOpen(false);
+    
+    // 原始退出登录代码（暂时注释）
+    /*
     try {
       await supabase.auth.signOut();
       router.push('/');
@@ -80,6 +102,7 @@ const Navbar = () => {
     } catch (error) {
       console.error('Error signing out:', error);
     }
+    */
   };
 
   // 点击其他地方关闭用户菜单

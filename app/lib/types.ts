@@ -54,4 +54,35 @@ export interface OrderItem {
   quantity: number;
   price: number;
   product?: Product;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number; // 百分比折扣或固定金额
+  min_purchase?: number; // 最低消费要求
+  max_discount?: number; // 最大折扣金额
+  expiry_date?: string;
+  is_active: boolean;
+}
+
+export interface Address {
+  id: string;
+  user_id: string;
+  full_name: string;
+  phone: string;
+  province: string;
+  city: string;
+  district: string;
+  street_address: string;
+  postal_code: string;
+  is_default: boolean;
+}
+
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
 } 

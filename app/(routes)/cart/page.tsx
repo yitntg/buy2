@@ -1,24 +1,109 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaTrash, FaArrowLeft, FaLock } from 'react-icons/fa';
+import { FaTrash, FaArrowLeft, FaLock, FaCheck, FaTimes } from 'react-icons/fa';
 import { useCartStore } from '@/app/lib/store';
+import { Coupon } from '@/app/lib/types';
+
+// 模拟优惠券数据库，实际应从API获取
+const mockCoupons: Coupon[] = [
+  {
+    id: 'coupon-1',
+    code: 'WELCOME10',
+    type: 'percentage',
+    value: 10,
+    min_purchase: 100,
+    is_active: true
+  },
+  {
+    id: 'coupon-2',
+    code: 'SAVE20',
+    type: 'fixed',
+    value: 20,
+    min_purchase: 200,
+    is_active: true
+  },
+  {
+    id: 'coupon-3',
+    code: 'FREESHIP',
+    type: 'fixed',
+    value: 15, // 免运费
+    is_active: true
+  }
+];
 
 const CartPage = () => {
-  const { items, removeFromCart, updateQuantity, clearCart } = useCartStore();
+  const { items, removeFromCart, updateQuantity, clearCart, coupon, applyCoupon, removeCoupon, getCartTotal } = useCartStore();
   const [couponCode, setCouponCode] = useState('');
+  const [couponMessage, setCouponMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
   
-  const subtotal = items.reduce((total, item) => total + (item.product?.price || 0) * item.quantity, 0);
-  const shipping = subtotal > 0 ? 15 : 0;
-  const discount = 0; // 实际应用中应该基于优惠券代码计算
-  const total = subtotal + shipping - discount;
+  const { subtotal, discount, shipping, total } = getCartTotal();
+  
+  // 当组件加载时，检查是否有已应用的优惠券，并更新显示
+  useEffect(() => {
+    if (coupon) {
+      setCouponCode(coupon.code);
+      setCouponMessage({
+        text: `优惠券 "${coupon.code}" 已应用`,
+        type: 'success'
+      });
+    }
+  }, [coupon]);
   
   const handleQuantityChange = (id: string, newQuantity: number) => {
     if (newQuantity >= 1) {
       updateQuantity(id, newQuantity);
     }
+  };
+  
+  const handleApplyCoupon = () => {
+    // 重置消息
+    setCouponMessage(null);
+    
+    if (!couponCode.trim()) {
+      setCouponMessage({
+        text: '请输入优惠码',
+        type: 'error'
+      });
+      return;
+    }
+    
+    // 查找匹配的优惠券
+    const foundCoupon = mockCoupons.find(
+      c => c.code.toUpperCase() === couponCode.toUpperCase() && c.is_active
+    );
+    
+    if (!foundCoupon) {
+      setCouponMessage({
+        text: '无效的优惠码',
+        type: 'error'
+      });
+      return;
+    }
+    
+    // 检查最低消费要求
+    if (foundCoupon.min_purchase && subtotal < foundCoupon.min_purchase) {
+      setCouponMessage({
+        text: `需要最低消费 ¥${foundCoupon.min_purchase.toFixed(2)} 才能使用此优惠码`,
+        type: 'error'
+      });
+      return;
+    }
+    
+    // 应用优惠券
+    applyCoupon(foundCoupon);
+    setCouponMessage({
+      text: '优惠券应用成功！',
+      type: 'success'
+    });
+  };
+  
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    setCouponCode('');
+    setCouponMessage(null);
   };
   
   if (items.length === 0) {
@@ -89,6 +174,11 @@ const CartPage = () => {
                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                         类别: {item.product?.category_id.replace('category-', '').replace(/^\w/, c => c.toUpperCase())}
                       </p>
+                      {item.quantity >= (item.product?.stock_quantity || 0) && (
+                        <p className="text-sm text-yellow-500 mt-1">
+                          已达最大库存
+                        </p>
+                      )}
                     </div>
                   </div>
                   
@@ -112,6 +202,7 @@ const CartPage = () => {
                         <input
                           type="number"
                           min="1"
+                          max={item.product?.stock_quantity}
                           value={item.quantity}
                           onChange={(e) => handleQuantityChange(item.product_id, parseInt(e.target.value) || 1)}
                           className="w-10 text-center border-none bg-transparent focus:outline-none focus:ring-0"
@@ -119,6 +210,7 @@ const CartPage = () => {
                         <button 
                           onClick={() => handleQuantityChange(item.product_id, item.quantity + 1)}
                           className="w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-r-lg"
+                          disabled={item.quantity >= (item.product?.stock_quantity || 0)}
                         >
                           +
                         </button>
@@ -159,20 +251,49 @@ const CartPage = () => {
             {/* 优惠券 */}
             <div className="glass-card p-6 rounded-xl">
               <h3 className="text-lg font-semibold mb-4">应用优惠券</h3>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <input 
-                  type="text" 
-                  placeholder="输入优惠码" 
-                  className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                />
-                <button 
-                  className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"
-                  disabled={!couponCode}
-                >
-                  应用
-                </button>
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input 
+                    type="text" 
+                    placeholder="输入优惠码" 
+                    className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    disabled={!!coupon}
+                  />
+                  {coupon ? (
+                    <button 
+                      className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors flex items-center"
+                      onClick={handleRemoveCoupon}
+                    >
+                      <FaTimes className="mr-2" /> 移除
+                    </button>
+                  ) : (
+                    <button 
+                      className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"
+                      onClick={handleApplyCoupon}
+                      disabled={!couponCode}
+                    >
+                      应用
+                    </button>
+                  )}
+                </div>
+                
+                {couponMessage && (
+                  <div className={`mt-2 text-sm ${couponMessage.type === 'success' ? 'text-green-500 flex items-center' : 'text-red-500'}`}>
+                    {couponMessage.type === 'success' && <FaCheck className="mr-1" />}
+                    {couponMessage.text}
+                  </div>
+                )}
+                
+                <div className="mt-2 text-sm text-gray-500">
+                  <p>可用优惠券:</p>
+                  <ul className="list-disc pl-5 mt-1 space-y-1">
+                    <li>WELCOME10: 订单满¥100享9折</li>
+                    <li>SAVE20: 订单满¥200立减¥20</li>
+                    <li>FREESHIP: 免运费</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -189,7 +310,7 @@ const CartPage = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">运费</span>
-                  <span>¥{shipping.toFixed(2)}</span>
+                  <span>{shipping === 0 ? '免费' : `¥${shipping.toFixed(2)}`}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between">

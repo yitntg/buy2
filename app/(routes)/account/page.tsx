@@ -33,6 +33,15 @@ const mockOrders = [
   },
 ];
 
+// 模拟用户数据 - 用于测试
+const mockUser = {
+  id: 'test-user-id',
+  email: 'test@example.com',
+  user_metadata: {
+    full_name: '测试用户'
+  }
+};
+
 export default function AccountPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -40,6 +49,12 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
+    // ===== 测试模式：使用模拟用户数据 =====
+    setUser(mockUser as any);
+    setLoading(false);
+    
+    // ===== 原始认证代码（暂时注释) =====
+    /*
     const getUser = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -59,15 +74,22 @@ export default function AccountPage() {
     };
 
     getUser();
+    */
   }, [router]);
 
   const handleSignOut = async () => {
+    // 测试模式：简单重定向到首页
+    router.push('/');
+    
+    // 原始退出登录代码（暂时注释）
+    /*
     try {
       await supabase.auth.signOut();
       router.push('/');
     } catch (error) {
       console.error('Error signing out:', error);
     }
+    */
   };
 
   // 用户还未加载时显示加载状态
