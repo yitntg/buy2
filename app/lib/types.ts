@@ -5,7 +5,7 @@ export interface Product {
   price: number;
   original_price?: number;
   image_url: string;
-  category_id: string;
+  category: string;
   is_featured: boolean;
   is_new: boolean;
   stock_quantity: number;
