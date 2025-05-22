@@ -103,6 +103,7 @@ const Navbar = () => {
   
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
   const productsMenuRef = useRef<HTMLDivElement>(null);
+  const menuTimeoutRef = useRef<NodeJS.Timeout>();
 
   // 检测页面滚动
   useEffect(() => {
@@ -177,23 +178,30 @@ const Navbar = () => {
     */
   };
 
-  // 点击其他地方关闭菜单
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (!target.closest('.user-menu') && isUserMenuOpen) {
-        setIsUserMenuOpen(false);
-      }
-      if (!target.closest('.products-menu') && isProductsMenuOpen) {
-        setIsProductsMenuOpen(false);
-      }
-    };
+  // 处理菜单显示
+  const handleMenuEnter = () => {
+    if (menuTimeoutRef.current) {
+      clearTimeout(menuTimeoutRef.current);
+    }
+    setIsProductsMenuOpen(true);
+  };
 
-    document.addEventListener('mousedown', handleClickOutside);
+  // 处理菜单隐藏
+  const handleMenuLeave = () => {
+    menuTimeoutRef.current = setTimeout(() => {
+      setIsProductsMenuOpen(false);
+      setActiveCategory(null);
+    }, 200); // 200ms 延迟，给用户足够时间移动到菜单
+  };
+
+  // 清理定时器
+  useEffect(() => {
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      if (menuTimeoutRef.current) {
+        clearTimeout(menuTimeoutRef.current);
+      }
     };
-  }, [isUserMenuOpen, isProductsMenuOpen]);
+  }, []);
 
   return (
     <nav className={`${isScrolled ? 'glass-effect shadow-md' : 'bg-transparent'} sticky top-0 z-50 py-4 px-6 md:px-10 transition-all duration-300`}>
@@ -220,8 +228,9 @@ const Navbar = () => {
               <div 
                 key={link.href} 
                 className="relative products-menu"
-                onMouseEnter={() => setIsProductsMenuOpen(true)}
-                onMouseLeave={() => setIsProductsMenuOpen(false)}
+                onMouseEnter={handleMenuEnter}
+                onMouseLeave={handleMenuLeave}
+                ref={productsMenuRef}
               >
                 <Link 
                   href={link.href}
@@ -233,8 +242,8 @@ const Navbar = () => {
                 {isProductsMenuOpen && (
                   <div 
                     className="absolute left-0 mt-2 w-[800px] bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 animate-fade-in"
-                    onMouseEnter={() => setIsProductsMenuOpen(true)}
-                    onMouseLeave={() => setIsProductsMenuOpen(false)}
+                    onMouseEnter={handleMenuEnter}
+                    onMouseLeave={handleMenuLeave}
                   >
                     <div className="grid grid-cols-5 gap-4 p-6">
                       {categories.map(category => (
@@ -242,7 +251,6 @@ const Navbar = () => {
                           key={category.id} 
                           className="group"
                           onMouseEnter={() => setActiveCategory(category.id)}
-                          onMouseLeave={() => setActiveCategory(null)}
                         >
                           <div className="relative h-32 mb-3 rounded-lg overflow-hidden">
                             <Image 
@@ -272,8 +280,8 @@ const Navbar = () => {
                     {activeCategory && (
                       <div 
                         className="absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 p-6 animate-fade-in"
-                        onMouseEnter={() => setActiveCategory(activeCategory)}
-                        onMouseLeave={() => setActiveCategory(null)}
+                        onMouseEnter={handleMenuEnter}
+                        onMouseLeave={handleMenuLeave}
                       >
                         <div className="flex">
                           <div className="w-1/3">
