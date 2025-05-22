@@ -5,49 +5,49 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FaArrowRight } from 'react-icons/fa';
 
-// 模拟分类数据
+// 模拟分类数据 - 确保商品数量与产品页保持一致
 const categories = [
   { 
     id: 'fashion', 
     name: '时尚', 
     description: '探索最新的时尚趋势，包括服装、鞋履和配饰',
     image: 'https://picsum.photos/600/400?random=1',
-    itemCount: 120
+    itemCount: 12
   },
   { 
     id: 'electronics', 
     name: '电子', 
     description: '发现最新的电子产品、智能设备和配件',
     image: 'https://picsum.photos/600/400?random=2',
-    itemCount: 85
+    itemCount: 12
   },
   { 
     id: 'home', 
     name: '家居', 
     description: '改善您的生活空间，浏览我们的家居装饰和家具系列',
     image: 'https://picsum.photos/600/400?random=3',
-    itemCount: 95
+    itemCount: 12
   },
   { 
     id: 'beauty', 
     name: '美妆', 
     description: '发现高品质的美容和个人护理产品',
     image: 'https://picsum.photos/600/400?random=4',
-    itemCount: 72
+    itemCount: 12
   },
   { 
     id: 'sports', 
     name: '运动', 
     description: '浏览我们的运动装备、健身器材和户外用品',
     image: 'https://picsum.photos/600/400?random=5',
-    itemCount: 68
+    itemCount: 12
   },
   { 
     id: 'accessories', 
     name: '配饰', 
     description: '用精美的配饰为您的造型增添亮点',
     image: 'https://picsum.photos/600/400?random=6',
-    itemCount: 105
+    itemCount: 12
   }
 ];
 
