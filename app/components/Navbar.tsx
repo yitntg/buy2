@@ -1,12 +1,82 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { FaShoppingCart, FaSearch, FaUser, FaHeart, FaBars, FaTimes, FaSignOutAlt, FaCog } from 'react-icons/fa';
+import { FaShoppingCart, FaSearch, FaUser, FaHeart, FaBars, FaTimes, FaSignOutAlt, FaCog, FaChevronDown } from 'react-icons/fa';
 import { useCartStore, useWishlistStore } from '@/app/lib/store';
 import { supabase } from '@/app/lib/supabase';
 import { User } from '@supabase/supabase-js';
+
+// 分类数据
+const categories = [
+  { 
+    id: 'fashion', 
+    name: '时尚', 
+    description: '服装、鞋履和配饰',
+    image: 'https://picsum.photos/600/400?random=1',
+    subcategories: [
+      { id: 'fashion-men', name: '男装' },
+      { id: 'fashion-women', name: '女装' },
+      { id: 'fashion-kids', name: '童装' },
+      { id: 'fashion-shoes', name: '鞋履' },
+      { id: 'fashion-bags', name: '包袋' },
+    ]
+  },
+  { 
+    id: 'electronics', 
+    name: '电子', 
+    description: '智能设备和配件',
+    image: 'https://picsum.photos/600/400?random=2',
+    subcategories: [
+      { id: 'electronics-phones', name: '手机' },
+      { id: 'electronics-computers', name: '电脑' },
+      { id: 'electronics-tablets', name: '平板' },
+      { id: 'electronics-audio', name: '音频设备' },
+      { id: 'electronics-accessories', name: '配件' },
+    ]
+  },
+  { 
+    id: 'home', 
+    name: '家居', 
+    description: '家居装饰和家具',
+    image: 'https://picsum.photos/600/400?random=3',
+    subcategories: [
+      { id: 'home-furniture', name: '家具' },
+      { id: 'home-decor', name: '装饰' },
+      { id: 'home-kitchen', name: '厨房' },
+      { id: 'home-bath', name: '浴室' },
+      { id: 'home-garden', name: '花园' },
+    ]
+  },
+  { 
+    id: 'beauty', 
+    name: '美妆', 
+    description: '美容和个人护理',
+    image: 'https://picsum.photos/600/400?random=4',
+    subcategories: [
+      { id: 'beauty-skincare', name: '护肤' },
+      { id: 'beauty-makeup', name: '彩妆' },
+      { id: 'beauty-haircare', name: '护发' },
+      { id: 'beauty-fragrance', name: '香水' },
+      { id: 'beauty-tools', name: '美妆工具' },
+    ]
+  },
+  { 
+    id: 'sports', 
+    name: '运动', 
+    description: '运动装备和户外用品',
+    image: 'https://picsum.photos/600/400?random=5',
+    subcategories: [
+      { id: 'sports-clothing', name: '运动服装' },
+      { id: 'sports-shoes', name: '运动鞋' },
+      { id: 'sports-equipment', name: '健身器材' },
+      { id: 'sports-outdoor', name: '户外装备' },
+      { id: 'sports-accessories', name: '运动配件' },
+    ]
+  }
+];
 
 // 模拟用户数据 - 用于测试，与AccountPage中保持一致
 const mockUser = {
@@ -22,6 +92,8 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isProductsMenuOpen, setIsProductsMenuOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -30,7 +102,8 @@ const Navbar = () => {
   const { items: wishlistItems } = useWishlistStore();
   
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
-  
+  const productsMenuRef = useRef<HTMLDivElement>(null);
+
   // 检测页面滚动
   useEffect(() => {
     const handleScroll = () => {
@@ -82,8 +155,7 @@ const Navbar = () => {
   // 导航栏项的列表
   const navLinks = [
     { href: '/', label: '首页' },
-    { href: '/products', label: '全部商品' },
-    { href: '/categories', label: '分类' },
+    { href: '/products', label: '全部商品', hasSubmenu: true },
     { href: '/deals', label: '优惠' },
     { href: '/about', label: '关于我们' },
   ];
@@ -105,12 +177,15 @@ const Navbar = () => {
     */
   };
 
-  // 点击其他地方关闭用户菜单
+  // 点击其他地方关闭菜单
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
       if (!target.closest('.user-menu') && isUserMenuOpen) {
         setIsUserMenuOpen(false);
+      }
+      if (!target.closest('.products-menu') && isProductsMenuOpen) {
+        setIsProductsMenuOpen(false);
       }
     };
 
@@ -118,7 +193,7 @@ const Navbar = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isUserMenuOpen]);
+  }, [isUserMenuOpen, isProductsMenuOpen]);
 
   return (
     <nav className={`${isScrolled ? 'glass-effect shadow-md' : 'bg-transparent'} sticky top-0 z-50 py-4 px-6 md:px-10 transition-all duration-300`}>
@@ -141,13 +216,102 @@ const Navbar = () => {
         {/* 桌面导航链接 */}
         <div className="hidden md:flex space-x-6 flex-1 justify-center">
           {navLinks.map((link) => (
-            <Link 
-              key={link.href} 
-              href={link.href} 
-              className={`font-medium ${pathname === link.href ? 'text-primary-500' : 'hover:text-primary-500'} transition-colors`}
-            >
-              {link.label}
-            </Link>
+            link.hasSubmenu ? (
+              <div 
+                key={link.href} 
+                className="relative products-menu"
+                onMouseEnter={() => setIsProductsMenuOpen(true)}
+                onMouseLeave={() => setIsProductsMenuOpen(false)}
+              >
+                <Link 
+                  href={link.href}
+                  className={`font-medium flex items-center hover:text-primary-500 transition-colors ${isProductsMenuOpen ? 'text-primary-500' : ''}`}
+                >
+                  {link.label} <FaChevronDown className={`ml-1 transition-transform ${isProductsMenuOpen ? 'rotate-180' : ''}`} />
+                </Link>
+                
+                {isProductsMenuOpen && (
+                  <div className="absolute left-0 mt-2 w-[800px] bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 animate-fade-in">
+                    <div className="grid grid-cols-5 gap-4 p-6">
+                      {categories.map(category => (
+                        <div 
+                          key={category.id} 
+                          className="group"
+                          onMouseEnter={() => setActiveCategory(category.id)}
+                          onMouseLeave={() => setActiveCategory(null)}
+                        >
+                          <div className="relative h-32 mb-3 rounded-lg overflow-hidden">
+                            <Image 
+                              src={category.image}
+                              alt={category.name}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                            <h3 className="absolute bottom-2 left-2 text-white font-medium">{category.name}</h3>
+                          </div>
+                          <div className="space-y-1">
+                            {category.subcategories.map(subcat => (
+                              <Link 
+                                key={subcat.id}
+                                href={`/products?category=${category.id}&subcategory=${subcat.id}`}
+                                className="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400"
+                                onClick={() => setIsProductsMenuOpen(false)}
+                              >
+                                {subcat.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {activeCategory && (
+                      <div className="absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 p-6 animate-fade-in">
+                        <div className="flex">
+                          <div className="w-1/3">
+                            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
+                              {categories.find(c => c.id === activeCategory)?.name}
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">
+                              {categories.find(c => c.id === activeCategory)?.description}
+                            </p>
+                            <Link 
+                              href={`/categories/${activeCategory}`}
+                              className="inline-block px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
+                              onClick={() => setIsProductsMenuOpen(false)}
+                            >
+                              浏览全部
+                            </Link>
+                          </div>
+                          <div className="w-2/3 pl-8">
+                            <div className="grid grid-cols-3 gap-4">
+                              {categories.find(c => c.id === activeCategory)?.subcategories.map(subcat => (
+                                <Link 
+                                  key={subcat.id}
+                                  href={`/products?category=${activeCategory}&subcategory=${subcat.id}`}
+                                  className="block p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                  onClick={() => setIsProductsMenuOpen(false)}
+                                >
+                                  <h4 className="font-medium text-gray-800 dark:text-gray-200">{subcat.name}</h4>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link 
+                key={link.href} 
+                href={link.href} 
+                className={`font-medium ${pathname === link.href ? 'text-primary-500' : 'hover:text-primary-500'} transition-colors`}
+              >
+                {link.label}
+              </Link>
+            )
           ))}
         </div>
         
