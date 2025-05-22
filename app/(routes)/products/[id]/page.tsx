@@ -1,63 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaHeart, FaShoppingCart, FaStar, FaShare, FaTruck, FaShieldAlt, FaCreditCard } from 'react-icons/fa';
 import { useCartStore, useWishlistStore } from '@/app/lib/store';
 import { Product } from '@/app/lib/types';
-
-// 模拟获取产品数据
-const getProductById = (id: string): Product => {
-  // 在实际应用中，这里应该从API或Supabase获取数据
-  return {
-    id,
-    name: `时尚商品 ${id.split('-')[1]}`,
-    description: '这是一个精美的商品，采用优质材料制作而成，简约而不简单的设计风格，适合各种场合使用。每一个细节都经过精心打磨，确保最高品质的用户体验。这款产品不仅实用，还能彰显您的个人品味与风格。',
-    price: 299,
-    original_price: 399,
-    image_url: `https://picsum.photos/600/800?random=${id}`,
-    category: 'category-1',
-    is_featured: true,
-    is_new: true,
-    stock_quantity: 15,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-};
-
-// 模拟获取相关产品
-const getRelatedProducts = (): Product[] => {
-  return Array.from({ length: 4 }).map((_, i) => ({
-    id: `product-${i + 10}`,
-    name: `相关商品 ${i + 1}`,
-    description: '相关商品描述',
-    price: 199 + i * 30,
-    original_price: i % 2 === 0 ? 299 + i * 30 : undefined,
-    image_url: `https://picsum.photos/600/800?random=${i + 100}`,
-    category: `category-${(i % 3) + 1}`,
-    is_featured: false,
-    is_new: i % 2 === 0,
-    stock_quantity: 10 + i,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }));
-};
-
-// 模拟产品评论
-const reviews = Array.from({ length: 3 }).map((_, i) => ({
-  id: `review-${i + 1}`,
-  user: `用户${i + 1}`,
-  avatar: `https://randomuser.me/api/portraits/${i % 2 === 0 ? 'women' : 'men'}/${i + 5}.jpg`,
-  rating: 4 + (i % 2),
-  date: new Date(Date.now() - i * 86400000).toLocaleDateString('zh-CN'),
-  content: '这个商品非常好，质量很棒，我非常喜欢！包装精美，物流速度也很快，会向朋友推荐这个商品。',
-}));
+import { supabase } from '@/app/lib/supabase';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const product = getProductById(id);
-  const relatedProducts = getRelatedProducts();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -66,21 +21,59 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const { addToCart } = useCartStore();
   const { addToWishlist, removeFromWishlist, items: wishlistItems } = useWishlistStore();
   
-  const isInWishlist = wishlistItems.some(item => item.id === product.id);
-  
+  const isInWishlist = wishlistItems.some(item => item.id === product?.id);
+
+  useEffect(() => {
+    const fetchProductData = async () => {
+      try {
+        // 获取商品详情
+        const { data: productData, error: productError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (productError) throw productError;
+        if (productData) {
+          setProduct(productData);
+          
+          // 获取同分类的相关商品
+          const { data: relatedData, error: relatedError } = await supabase
+            .from('products')
+            .select('*')
+            .eq('category', productData.category)
+            .neq('id', id)
+            .limit(4);
+
+          if (relatedError) throw relatedError;
+          setRelatedProducts(relatedData || []);
+        }
+      } catch (error) {
+        console.error('Error fetching product data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductData();
+  }, [id]);
+
   // 模拟多张产品图片
-  const productImages = [
+  const productImages = product ? [
     product.image_url,
-    `https://picsum.photos/600/800?random=${id}-2`,
-    `https://picsum.photos/600/800?random=${id}-3`,
-    `https://picsum.photos/600/800?random=${id}-4`,
-  ];
+    product.image_url, // 暂时用同一张图片，后续可以扩展多图
+    product.image_url,
+    product.image_url,
+  ] : [];
   
   const handleAddToCart = () => {
-    addToCart(product, quantity);
+    if (product) {
+      addToCart(product, quantity);
+    }
   };
   
   const handleWishlistToggle = () => {
+    if (!product) return;
     if (isInWishlist) {
       removeFromWishlist(product.id);
     } else {
@@ -89,10 +82,41 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   };
   
   const handleQuantityChange = (value: number) => {
-    if (value >= 1 && value <= product.stock_quantity) {
+    if (product && value >= 1 && value <= product.stock_quantity) {
       setQuantity(value);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-16 px-6 md:px-10">
+        <div className="container mx-auto">
+          <div className="glass-card p-10 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-300">加载中...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen py-16 px-6 md:px-10">
+        <div className="container mx-auto">
+          <div className="glass-card p-10 text-center">
+            <h1 className="text-3xl font-bold mb-6">商品未找到</h1>
+            <p className="text-lg mb-8 text-gray-600 dark:text-gray-300">
+              抱歉，该商品不存在或已被下架。
+            </p>
+            <Link href="/products" className="px-8 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-full transition-all transform hover:scale-105 hover:shadow-lg inline-block">
+              返回商品列表
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-16 px-6 md:px-10">
@@ -113,7 +137,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 href={`/categories/${product.category}`} 
                 className="text-gray-500 hover:text-primary-500 transition-colors"
               >
-                {product.category.replace('category-', '').replace(/^\w/, c => c.toUpperCase())}
+                {product.category}
               </Link>
             </li>
             <li className="flex items-center space-x-2">
@@ -303,7 +327,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 商品编号: {product.id}
               </span>
               <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full">
-                分类: {product.category.replace('category-', '').replace(/^\w/, c => c.toUpperCase())}
+                分类: {product.category}
               </span>
               <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full">
                 标签: 时尚, 新品
@@ -373,7 +397,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                   <div className="relative h-64 rounded-xl overflow-hidden">
                     <Image 
-                      src={productImages[1]}
+                      src={product.image_url}
                       alt="Product detail 1"
                       fill
                       style={{ objectFit: 'cover' }}
@@ -381,7 +405,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                   </div>
                   <div className="relative h-64 rounded-xl overflow-hidden">
                     <Image 
-                      src={productImages[2]}
+                      src={product.image_url}
                       alt="Product detail 2"
                       fill
                       style={{ objectFit: 'cover' }}
@@ -512,95 +536,6 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex overflow-x-auto space-x-2 py-2">
-                    <button className="whitespace-nowrap px-4 py-2 rounded-full bg-primary-500 text-white">
-                      所有评价
-                    </button>
-                    <button className="whitespace-nowrap px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200">
-                      好评 (13)
-                    </button>
-                    <button className="whitespace-nowrap px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200">
-                      中评 (2)
-                    </button>
-                    <button className="whitespace-nowrap px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200">
-                      差评 (1)
-                    </button>
-                    <button className="whitespace-nowrap px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200">
-                      有图 (8)
-                    </button>
-                    <button className="whitespace-nowrap px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200">
-                      视频 (2)
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="space-y-6">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="border-b border-gray-200 dark:border-gray-700 pb-6 last:border-b-0">
-                      <div className="flex items-center mb-3">
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
-                          <Image 
-                            src={review.avatar}
-                            alt={review.user}
-                            fill
-                            style={{ objectFit: 'cover' }}
-                          />
-                        </div>
-                        <div>
-                          <div className="font-medium">{review.user}</div>
-                          <div className="flex items-center">
-                            <div className="flex mr-2">
-                              {[...Array(5)].map((_, i) => (
-                                <FaStar 
-                                  key={i} 
-                                  className={`w-3 h-3 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`} 
-                                />
-                              ))}
-                            </div>
-                            <div className="text-xs text-gray-500">{review.date}</div>
-                          </div>
-                        </div>
-                      </div>
-                      <p className="text-gray-700 dark:text-gray-300 mb-3">
-                        {review.content}
-                      </p>
-                      
-                      {review.id === 'review-1' && (
-                        <div className="flex space-x-2 mt-3">
-                          <div className="relative w-16 h-16 rounded-lg overflow-hidden">
-                            <Image 
-                              src={`https://picsum.photos/200/200?random=${review.id}-1`}
-                              alt="Review image"
-                              fill
-                              style={{ objectFit: 'cover' }}
-                            />
-                          </div>
-                          <div className="relative w-16 h-16 rounded-lg overflow-hidden">
-                            <Image 
-                              src={`https://picsum.photos/200/200?random=${review.id}-2`}
-                              alt="Review image"
-                              fill
-                              style={{ objectFit: 'cover' }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center mt-3">
-                        <button className="flex items-center text-gray-500 hover:text-primary-500 transition-colors">
-                          <FaHeart className="w-3 h-3 mr-1" />
-                          <span className="text-xs">有用 (3)</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="mt-6">
-                  <button className="w-full py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                    查看更多评价
-                  </button>
                 </div>
               </div>
             )}
