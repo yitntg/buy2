@@ -38,11 +38,9 @@ const ProductsPage = () => {
   
   // 从URL参数中获取初始分类
   useEffect(() => {
-    const categoryFromUrl = searchParams.get('category');
-    if (categoryFromUrl && (categoryFromUrl === 'all' || categories.some(cat => cat.id === categoryFromUrl))) {
-      setSelectedCategory(categoryFromUrl);
-    }
-  }, [searchParams, categories]);
+    const categoryFromUrl = searchParams.get('category') || 'all';
+    setSelectedCategory(categoryFromUrl);
+  }, [searchParams]);
   
   // 拉取真实商品数据
   useEffect(() => {
