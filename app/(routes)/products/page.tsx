@@ -6,18 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FaFilter, FaSort, FaChevronDown, FaChevronUp, FaTimes } from 'react-icons/fa';
 import ProductCard from '@/app/components/ProductCard';
 import { supabase } from '@/app/lib/supabase';
-import { Product } from '@/app/lib/types';
-
-// 模拟分类数据
-const categories = [
-  { id: 'all', name: '全部' },
-  { id: 'fashion', name: '时尚' },
-  { id: 'electronics', name: '电子' },
-  { id: 'home', name: '家居' },
-  { id: 'beauty', name: '美妆' },
-  { id: 'sports', name: '运动' },
-  { id: 'accessories', name: '配饰' }
-];
+import { Product, Category } from '@/app/lib/types';
 
 const ProductsPage = () => {
   const router = useRouter();
@@ -35,13 +24,25 @@ const ProductsPage = () => {
     onSale: false
   });
   
+  const [categories, setCategories] = useState<Category[]>([]);
+  
+  useEffect(() => {
+    async function fetchCategories() {
+      const { data, error } = await supabase.from('categories').select('*').order('id');
+      if (!error && data) {
+        setCategories(data);
+      }
+    }
+    fetchCategories();
+  }, []);
+  
   // 从URL参数中获取初始分类
   useEffect(() => {
     const categoryFromUrl = searchParams.get('category');
-    if (categoryFromUrl && categories.some(cat => cat.id === categoryFromUrl)) {
+    if (categoryFromUrl && (categoryFromUrl === 'all' || categories.some(cat => cat.id === categoryFromUrl))) {
       setSelectedCategory(categoryFromUrl);
     }
-  }, [searchParams]);
+  }, [searchParams, categories]);
   
   // 拉取真实商品数据
   useEffect(() => {
@@ -258,6 +259,7 @@ const ProductsPage = () => {
                   onChange={handleCategoryChange}
                   style={{ color: 'currentColor' }}
                 >
+                  <option key="all" value="all" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">全部</option>
                   {categories.map(category => (
                     <option key={category.id} value={category.id} className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
                       {category.name}
@@ -275,7 +277,7 @@ const ProductsPage = () => {
                   
                   {selectedCategory !== 'all' && (
                     <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
-                      {categories.find(cat => cat.id === selectedCategory)?.name}
+                      {categories.find(cat => cat.id === selectedCategory)?.name || '未知分类'}
                       <button 
                         className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setSelectedCategory('all')}
