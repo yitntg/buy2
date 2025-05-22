@@ -192,50 +192,48 @@ const ProductsPage = () => {
       <section className="py-16 px-6 md:px-10">
         <div className="container mx-auto">
           {/* 顶部水平过滤栏 - 简化版 */}
-          <div className="glass-card p-4 md:p-5 mb-6 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
+          <div className="glass-card p-5 mb-6 rounded-xl">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">过滤与排序</h3>
+              
+              <select 
+                className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500 text-gray-800 dark:text-gray-200 w-36"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                style={{ color: 'currentColor' }}
+              >
+                <option value="popularity" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">热门程度</option>
+                <option value="price-low" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">价格: 低到高</option>
+                <option value="price-high" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">价格: 高到低</option>
+                <option value="newest" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">最新上架</option>
+              </select>
             </div>
             
-            <div className="flex flex-wrap items-center gap-2 mb-3">
+            <div className="flex flex-wrap gap-2 mb-4">
               <button 
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filters.inStock ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${filters.inStock ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
                 onClick={() => setFilters({...filters, inStock: !filters.inStock})}
               >
                 有货
               </button>
               <button 
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filters.featured ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${filters.featured ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
                 onClick={() => setFilters({...filters, featured: !filters.featured})}
               >
                 特色商品
               </button>
               <button 
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filters.onSale ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${filters.onSale ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
                 onClick={() => setFilters({...filters, onSale: !filters.onSale})}
               >
                 优惠商品
               </button>
-              
-              <div className="ml-auto flex items-center gap-2">
-                <select 
-                  className="px-3 py-1.5 text-xs bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500 text-gray-800 dark:text-gray-200"
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value)}
-                  style={{ color: 'currentColor' }}
-                >
-                  <option value="popularity" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">热门程度</option>
-                  <option value="price-low" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">价格: 低到高</option>
-                  <option value="price-high" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">价格: 高到低</option>
-                  <option value="newest" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">最新上架</option>
-                </select>
-              </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="relative">
                 <button 
-                  className="w-full flex items-center justify-between px-3 py-1.5 text-xs bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="w-full flex items-center justify-between px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500 text-sm"
                   onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
                 >
                   <span>价格: {priceRange.min || priceRange.max ? `¥${priceRange.min || '0'} - ¥${priceRange.max || '∞'}` : '所有价格'}</span>
@@ -244,32 +242,32 @@ const ProductsPage = () => {
                 
                 {isPriceFilterOpen && (
                   <div className="absolute top-full left-0 right-0 mt-1 p-3 bg-white dark:bg-gray-800 shadow-lg rounded-lg z-20">
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-3">
                       <div className="flex-1">
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">最低价格</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">最低价格</label>
                         <input
                           type="number"
                           placeholder="最低"
-                          className="w-full px-2 py-1 text-xs bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500 text-gray-800 dark:text-gray-200"
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500 text-gray-800 dark:text-gray-200"
                           value={priceRange.min}
                           onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
                         />
                       </div>
                       <div className="flex-1">
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">最高价格</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">最高价格</label>
                         <input
                           type="number"
                           placeholder="最高"
-                          className="w-full px-2 py-1 text-xs bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500 text-gray-800 dark:text-gray-200"
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500 text-gray-800 dark:text-gray-200"
                           value={priceRange.max}
                           onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
                         />
                       </div>
                     </div>
                     
-                    <div className="flex justify-end mt-2">
+                    <div className="flex justify-end mt-3">
                       <button 
-                        className="px-2 py-1 text-xs bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"
+                        className="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors text-sm"
                         onClick={() => setIsPriceFilterOpen(false)}
                       >
                         应用
@@ -281,7 +279,7 @@ const ProductsPage = () => {
               
               <div className="flex">
                 <select 
-                  className="w-full px-3 py-1.5 text-xs bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500 text-gray-800 dark:text-gray-200"
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500 text-gray-800 dark:text-gray-200 text-sm"
                   value={selectedCategory}
                   onChange={handleCategoryChange}
                   style={{ color: 'currentColor' }}
@@ -297,73 +295,73 @@ const ProductsPage = () => {
             
             {/* 激活的过滤条件展示 */}
             {(selectedCategory !== 'all' || filters.inStock || filters.featured || filters.onSale || priceRange.min || priceRange.max) && (
-              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <div className="flex flex-wrap items-center gap-1">
-                  <span className="text-xs text-gray-600 dark:text-gray-400">已选条件:</span>
+              <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">已选条件:</span>
                   
                   {selectedCategory !== 'all' && (
-                    <span className="flex items-center px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs">
+                    <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
                       {categories.find(cat => cat.id === selectedCategory)?.name}
                       <button 
-                        className="ml-1 text-primary-400 hover:text-primary-600"
+                        className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setSelectedCategory('all')}
                       >
-                        <FaTimes size={10} />
+                        <FaTimes size={12} />
                       </button>
                     </span>
                   )}
                   
                   {filters.inStock && (
-                    <span className="flex items-center px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs">
+                    <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
                       有货
                       <button 
-                        className="ml-1 text-primary-400 hover:text-primary-600"
+                        className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setFilters({...filters, inStock: false})}
                       >
-                        <FaTimes size={10} />
+                        <FaTimes size={12} />
                       </button>
                     </span>
                   )}
                   
                   {filters.featured && (
-                    <span className="flex items-center px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs">
+                    <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
                       特色商品
                       <button 
-                        className="ml-1 text-primary-400 hover:text-primary-600"
+                        className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setFilters({...filters, featured: false})}
                       >
-                        <FaTimes size={10} />
+                        <FaTimes size={12} />
                       </button>
                     </span>
                   )}
                   
                   {filters.onSale && (
-                    <span className="flex items-center px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs">
+                    <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
                       优惠商品
                       <button 
-                        className="ml-1 text-primary-400 hover:text-primary-600"
+                        className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setFilters({...filters, onSale: false})}
                       >
-                        <FaTimes size={10} />
+                        <FaTimes size={12} />
                       </button>
                     </span>
                   )}
                   
                   {(priceRange.min || priceRange.max) && (
-                    <span className="flex items-center px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs">
+                    <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
                       价格: ¥{priceRange.min || '0'} - ¥{priceRange.max || '∞'}
                       <button 
-                        className="ml-1 text-primary-400 hover:text-primary-600"
+                        className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setPriceRange({ min: '', max: '' })}
                       >
-                        <FaTimes size={10} />
+                        <FaTimes size={12} />
                       </button>
                     </span>
                   )}
                 </div>
                 
                 <button 
-                  className="px-2 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 text-xs font-medium rounded-lg transition-colors"
+                  className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 text-sm font-medium rounded-lg transition-colors"
                   onClick={resetFilters}
                 >
                   重置过滤
