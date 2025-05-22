@@ -249,10 +249,10 @@ const Navbar = () => {
                       {categories.map(category => (
                         <div 
                           key={category.id} 
-                          className="group"
+                          className={`group cursor-pointer${activeCategory === category.id ? ' bg-gray-50 dark:bg-gray-900' : ''}`}
                           onMouseEnter={() => setActiveCategory(category.id)}
                         >
-                          <div className="relative h-32 mb-3 rounded-lg overflow-hidden">
+                          <div className="relative h-32 mb-3 rounded-lg overflow-hidden select-none">
                             <Image 
                               src={category.image}
                               alt={category.name}
@@ -260,7 +260,7 @@ const Navbar = () => {
                               className="object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                            <h3 className="absolute bottom-2 left-2 text-white font-medium">{category.name}</h3>
+                            <h3 className="absolute bottom-2 left-2 text-white font-medium select-none">{category.name}</h3>
                           </div>
                           <div className="space-y-1">
                             {category.subcategories.map(subcat => (
@@ -279,12 +279,12 @@ const Navbar = () => {
                     </div>
                     {activeCategory && (
                       <div 
-                        className="absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 p-6 animate-fade-in"
+                        className="absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 p-6 animate-fade-in pointer-events-auto"
                         onMouseEnter={handleMenuEnter}
                         onMouseLeave={handleMenuLeave}
                       >
                         <div className="flex">
-                          <div className="w-1/3">
+                          <div className="w-1/3 select-none">
                             <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
                               {categories.find(c => c.id === activeCategory)?.name}
                             </h3>
