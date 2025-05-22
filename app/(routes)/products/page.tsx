@@ -1,35 +1,48 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FaFilter, FaSort, FaChevronDown, FaChevronUp, FaTimes } from 'react-icons/fa';
 import ProductCard from '@/app/components/ProductCard';
-
-// 模拟产品数据
-const mockProducts = Array.from({ length: 12 }).map((_, i) => ({
-  id: `product-${i + 1}`,
-  name: `时尚商品 ${i + 1}`,
-  description: '这是一个非常棒的商品，质量上乘，设计精美。',
-  price: 199 + i * 50,
-  original_price: i % 2 === 0 ? 299 + i * 50 : undefined,
-  image_url: `https://picsum.photos/600/800?random=${i + 20}`,
-  category_id: `category-${(i % 3) + 1}`,
-  is_featured: i % 5 === 0,
-  is_new: i % 4 === 0,
-  stock_quantity: 10 + i,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-}));
 
 // 模拟分类数据
 const categories = [
   { id: 'all', name: '全部' },
-  { id: 'category-1', name: '时尚' },
-  { id: 'category-2', name: '电子' },
-  { id: 'category-3', name: '家居' },
+  { id: 'fashion', name: '时尚' },
+  { id: 'electronics', name: '电子' },
+  { id: 'home', name: '家居' },
+  { id: 'beauty', name: '美妆' },
+  { id: 'sports', name: '运动' },
+  { id: 'accessories', name: '配饰' }
 ];
 
+// 模拟产品数据
+const mockProducts = Array.from({ length: 12 }).map((_, i) => {
+  // 随机分配一个分类（排除'all'）
+  const categoryList = categories.filter(cat => cat.id !== 'all');
+  const randomCategory = categoryList[i % categoryList.length];
+  
+  return {
+    id: `product-${i + 1}`,
+    name: `${randomCategory.name} 商品 ${i + 1}`,
+    description: '这是一个非常棒的商品，质量上乘，设计精美。',
+    price: 199 + i * 50,
+    original_price: i % 2 === 0 ? 299 + i * 50 : undefined,
+    image_url: `https://picsum.photos/600/800?random=${i + 20}`,
+    category_id: randomCategory.id,
+    is_featured: i % 5 === 0,
+    is_new: i % 4 === 0,
+    stock_quantity: 10 + i,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+});
+
 const ProductsPage = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
   // 添加状态管理
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
@@ -41,6 +54,35 @@ const ProductsPage = () => {
     onSale: false
   });
   
+  // 从URL参数中获取初始分类
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get('category');
+    if (categoryFromUrl && categories.some(cat => cat.id === categoryFromUrl)) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [searchParams]);
+  
+  // 更新URL参数
+  const updateUrlParams = (category: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    if (category === 'all') {
+      params.delete('category');
+    } else {
+      params.set('category', category);
+    }
+    
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    router.push(newUrl, { scroll: false });
+  };
+  
+  // 修改分类选择处理函数
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCategory = e.target.value;
+    setSelectedCategory(newCategory);
+    updateUrlParams(newCategory);
+  };
+  
   // 重置过滤条件
   const resetFilters = () => {
     setSelectedCategory('all');
@@ -50,6 +92,9 @@ const ProductsPage = () => {
       featured: false,
       onSale: false
     });
+    
+    // 重置URL参数
+    router.push('/products', { scroll: false });
   };
   
   // 过滤并排序产品
@@ -219,11 +264,11 @@ const ProductsPage = () => {
                 <select 
                   className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  onChange={handleCategoryChange}
                 >
                   {categories.map(category => (
                     <option key={category.id} value={category.id}>
-                      商品分类: {category.name}
+                      {category.name}
                     </option>
                   ))}
                 </select>

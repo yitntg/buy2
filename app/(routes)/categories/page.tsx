@@ -98,12 +98,20 @@ export default function CategoriesPage() {
                   <span className="text-sm text-gray-500 dark:text-gray-400">
                     {category.itemCount} 件商品
                   </span>
-                  <Link 
-                    href={`/categories/${category.id}`}
-                    className="inline-flex items-center text-primary-500 hover:text-primary-600 transition-colors"
-                  >
-                    浏览全部 <FaArrowRight className="ml-2" />
-                  </Link>
+                  <div className="flex items-center gap-4">
+                    <Link 
+                      href={`/products?category=${category.id}`}
+                      className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
+                    >
+                      查看产品
+                    </Link>
+                    <Link 
+                      href={`/categories/${category.id}`}
+                      className="inline-flex items-center text-primary-500 hover:text-primary-600 transition-colors"
+                    >
+                      浏览分类 <FaArrowRight className="ml-2" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

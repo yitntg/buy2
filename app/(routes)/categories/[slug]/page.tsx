@@ -164,9 +164,17 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
               {categoryInfo.name}
             </h1>
-            <p className="text-xl text-white/90 max-w-2xl">
+            <p className="text-xl text-white/90 max-w-2xl mb-4">
               {categoryInfo.description}
             </p>
+            <div>
+              <Link 
+                href={`/products?category=${slug}`}
+                className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"
+              >
+                查看所有{categoryInfo.name}产品
+              </Link>
+            </div>
           </div>
         </div>
       )}
