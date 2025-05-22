@@ -172,7 +172,7 @@ const CartPage = () => {
                         </Link>
                       </h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        类别: {item.product?.category_id.replace('category-', '').replace(/^\w/, c => c.toUpperCase())}
+                        类别: {item.product?.category.replace('category-', '').replace(/^w/, c => c.toUpperCase())}
                       </p>
                       {item.quantity >= (item.product?.stock_quantity || 0) && (
                         <p className="text-sm text-yellow-500 mt-1">

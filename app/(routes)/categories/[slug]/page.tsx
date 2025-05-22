@@ -56,7 +56,7 @@ const generateProductsByCategory = (categoryId: string) => {
     price: 199 + i * 50,
     original_price: i % 2 === 0 ? 299 + i * 50 : undefined,
     image_url: `https://picsum.photos/600/800?random=${categoryId}-${i + 20}`,
-    category_id: categoryId,
+    category: categoryId,
     is_featured: i % 5 === 0,
     is_new: i % 4 === 0,
     stock_quantity: 10 + i,

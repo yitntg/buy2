@@ -14,7 +14,7 @@ const featuredProducts = Array.from({ length: 8 }).map((_, i) => ({
   price: 199 + i * 50,
   original_price: i % 2 === 0 ? 299 + i * 50 : undefined,
   image_url: `https://picsum.photos/600/800?random=${i + 1}`,
-  category_id: `category-${(i % 3) + 1}`,
+  category: `category-${(i % 3) + 1}`,
   is_featured: true,
   is_new: i % 4 === 0,
   stock_quantity: 10 + i,

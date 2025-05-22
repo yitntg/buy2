@@ -110,10 +110,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <li className="flex items-center space-x-2">
               <span className="text-gray-400">/</span>
               <Link 
-                href={`/categories/${product.category_id}`} 
+                href={`/categories/${product.category}`} 
                 className="text-gray-500 hover:text-primary-500 transition-colors"
               >
-                {product.category_id.replace('category-', '').replace(/^\w/, c => c.toUpperCase())}
+                {product.category.replace('category-', '').replace(/^\w/, c => c.toUpperCase())}
               </Link>
             </li>
             <li className="flex items-center space-x-2">
@@ -303,7 +303,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 商品编号: {product.id}
               </span>
               <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full">
-                分类: {product.category_id.replace('category-', '').replace(/^\w/, c => c.toUpperCase())}
+                分类: {product.category.replace('category-', '').replace(/^\w/, c => c.toUpperCase())}
               </span>
               <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full">
                 标签: 时尚, 新品
