@@ -295,7 +295,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                 返回订单列表
               </Link>
               
-              {/* 只有特定状态的订单才显示取消按钮 */}
+              {/* 已支付状态可以取消订单 */}
               {order.status === ORDER_STATUS.PAID && (
                 <button
                   onClick={handleCancelOrder}
@@ -304,6 +304,16 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                 >
                   {isCancelling ? '处理中...' : '取消订单'}
                 </button>
+              )}
+              
+              {/* 已发货或已送达的订单可以申请退款 */}
+              {(order.status === ORDER_STATUS.SHIPPED || order.status === ORDER_STATUS.DELIVERED) && (
+                <Link 
+                  href={`/order/${order.id}/refund`}
+                  className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors"
+                >
+                  申请退款
+                </Link>
               )}
             </div>
             
