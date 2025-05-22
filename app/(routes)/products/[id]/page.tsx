@@ -12,6 +12,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const { id } = params;
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [productImages, setProductImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [quantity, setQuantity] = useState(1);
@@ -37,6 +38,20 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         if (productData) {
           setProduct(productData);
           
+          // 获取商品图片
+          const { data: images, error: imagesError } = await supabase
+            .from('product_images')
+            .select('*')
+            .eq('product_id', id)
+            .order('sort_order', { ascending: true });
+
+          if (imagesError) throw imagesError;
+          if (images && images.length > 0) {
+            setProductImages(images.map(img => img.image_url));
+          } else {
+            setProductImages([]);
+          }
+
           // 获取同分类的相关商品
           const { data: relatedData, error: relatedError } = await supabase
             .from('products')
@@ -58,13 +73,13 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     fetchProductData();
   }, [id]);
 
-  // 模拟多张产品图片
-  const productImages = product ? [
-    product.image_url,
-    product.image_url, // 暂时用同一张图片，后续可以扩展多图
-    product.image_url,
-    product.image_url,
-  ] : [];
+  // 商品图片数组，优先用 productImages
+  const imagesToShow = productImages.length > 0 ? productImages : [
+    '/no-image.png',
+    '/no-image.png',
+    '/no-image.png',
+    '/no-image.png',
+  ];
   
   const handleAddToCart = () => {
     if (product) {
@@ -154,7 +169,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <div className="flex flex-col-reverse md:flex-row gap-4">
               {/* 缩略图 */}
               <div className="flex md:flex-col gap-3 mt-4 md:mt-0">
-                {productImages.map((img, index) => (
+                {imagesToShow.map((img, index) => (
                   <button
                     key={index}
                     className={`relative w-16 h-16 border-2 rounded-lg overflow-hidden ${
@@ -177,7 +192,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               {/* 主图 */}
               <div className="relative h-[500px] md:flex-1 glass-card rounded-xl overflow-hidden">
                 <Image
-                  src={productImages[activeImageIndex]}
+                  src={imagesToShow[activeImageIndex]}
                   alt={product.name}
                   fill
                   style={{ objectFit: 'cover' }}
