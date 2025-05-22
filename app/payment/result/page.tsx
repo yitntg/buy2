@@ -65,7 +65,7 @@ export default function PaymentResultPage() {
           </div>
           
           <div className="flex justify-center space-x-4">
-            <Link href={orderId ? `/order/${orderId}` : '/orders'} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            <Link href={orderId ? `/order/${orderId}` : '/account?tab=orders'} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
               查看订单
             </Link>
             <Link href="/" className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
