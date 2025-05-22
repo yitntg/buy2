@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { FaFilter, FaSort, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaFilter, FaSort, FaChevronDown, FaChevronUp, FaTimes } from 'react-icons/fa';
 import ProductCard from '@/app/components/ProductCard';
 
 // 模拟产品数据
@@ -34,7 +34,6 @@ const ProductsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
-  const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState('popularity');
   const [filters, setFilters] = useState({
     inStock: false,
@@ -129,101 +128,54 @@ const ProductsPage = () => {
       {/* 产品列表 */}
       <section className="py-16 px-6 md:px-10">
         <div className="container mx-auto">
-          {/* 顶部水平过滤栏 */}
+          {/* 顶部水平过滤栏 - 简化版 */}
           <div className="glass-card p-6 mb-8 rounded-xl">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold mb-4 md:mb-0">过滤与排序</h3>
+            <div className="flex items-center gap-2 mb-4">
+              <h3 className="text-xl font-semibold">过滤与排序</h3>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <button 
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filters.inStock ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
+                onClick={() => setFilters({...filters, inStock: !filters.inStock})}
+              >
+                有货
+              </button>
+              <button 
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filters.featured ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
+                onClick={() => setFilters({...filters, featured: !filters.featured})}
+              >
+                特色商品
+              </button>
+              <button 
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filters.onSale ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
+                onClick={() => setFilters({...filters, onSale: !filters.onSale})}
+              >
+                优惠商品
+              </button>
               
-              <div className="flex flex-wrap gap-3">
-                {/* 快速过滤标签 */}
-                <div className="flex flex-wrap gap-2">
-                  <button 
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filters.inStock ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
-                    onClick={() => setFilters({...filters, inStock: !filters.inStock})}
-                  >
-                    有货
-                  </button>
-                  <button 
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filters.featured ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
-                    onClick={() => setFilters({...filters, featured: !filters.featured})}
-                  >
-                    特色商品
-                  </button>
-                  <button 
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filters.onSale ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
-                    onClick={() => setFilters({...filters, onSale: !filters.onSale})}
-                  >
-                    优惠商品
-                  </button>
-                </div>
-                
-                {/* 排序下拉框 */}
-                <div className="relative z-10">
-                  <select 
-                    className="min-w-[150px] px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    value={sortOrder}
-                    onChange={(e) => setSortOrder(e.target.value)}
-                  >
-                    <option value="popularity">热门程度</option>
-                    <option value="price-low">价格: 低到高</option>
-                    <option value="price-high">价格: 高到低</option>
-                    <option value="newest">最新上架</option>
-                  </select>
-                </div>
+              <div className="ml-auto flex items-center gap-3">
+                <select 
+                  className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                >
+                  <option value="popularity">热门程度</option>
+                  <option value="price-low">价格: 低到高</option>
+                  <option value="price-high">价格: 高到低</option>
+                  <option value="newest">最新上架</option>
+                </select>
               </div>
             </div>
             
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* 分类过滤器 */}
-              <div className="relative">
-                <button 
-                  className="w-full flex items-center justify-between px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  onClick={() => setIsCategoryFilterOpen(!isCategoryFilterOpen)}
-                >
-                  <span>商品分类: {categories.find(cat => cat.id === selectedCategory)?.name || '全部'}</span>
-                  {isCategoryFilterOpen ? <FaChevronUp /> : <FaChevronDown />}
-                </button>
-                
-                {isCategoryFilterOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-white dark:bg-gray-800 shadow-lg rounded-lg z-20">
-                    <div className="grid grid-cols-2 gap-2">
-                      {categories.map((category) => (
-                        <div key={category.id} className="flex items-center">
-                          <input
-                            type="radio"
-                            id={category.id}
-                            name="category"
-                            checked={selectedCategory === category.id}
-                            onChange={() => setSelectedCategory(category.id)}
-                            className="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                          />
-                          <label htmlFor={category.id} className="ml-2 text-gray-700 dark:text-gray-200">
-                            {category.name}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div className="flex justify-end mt-4">
-                      <button 
-                        className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"
-                        onClick={() => setIsCategoryFilterOpen(false)}
-                      >
-                        应用
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* 价格区间过滤器 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="relative">
                 <button 
                   className="w-full flex items-center justify-between px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
                 >
-                  <span>价格区间</span>
-                  {isPriceFilterOpen ? <FaChevronUp /> : <FaChevronDown />}
+                  <span>价格区间 {priceRange.min || priceRange.max ? `(¥${priceRange.min || '0'} - ¥${priceRange.max || '∞'})` : ''}</span>
+                  <FaChevronDown className="transition-transform" style={{transform: isPriceFilterOpen ? 'rotate(180deg)' : 'rotate(0deg)'}} />
                 </button>
                 
                 {isPriceFilterOpen && (
@@ -262,32 +214,36 @@ const ProductsPage = () => {
                   </div>
                 )}
               </div>
-            </div>
-            
-            {/* 重置过滤按钮 */}
-            <div className="mt-4 flex justify-end">
-              <button 
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium rounded-lg transition-colors flex items-center"
-                onClick={resetFilters}
-              >
-                重置所有过滤
-              </button>
+              
+              <div className="flex">
+                <select 
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                >
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      商品分类: {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             
             {/* 激活的过滤条件展示 */}
             {(selectedCategory !== 'all' || filters.inStock || filters.featured || filters.onSale || priceRange.min || priceRange.max) && (
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">激活的过滤条件:</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">已选条件:</span>
                   
                   {selectedCategory !== 'all' && (
                     <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
-                      分类: {categories.find(cat => cat.id === selectedCategory)?.name}
+                      {categories.find(cat => cat.id === selectedCategory)?.name}
                       <button 
                         className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setSelectedCategory('all')}
                       >
-                        &times;
+                        <FaTimes size={12} />
                       </button>
                     </span>
                   )}
@@ -299,7 +255,7 @@ const ProductsPage = () => {
                         className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setFilters({...filters, inStock: false})}
                       >
-                        &times;
+                        <FaTimes size={12} />
                       </button>
                     </span>
                   )}
@@ -311,7 +267,7 @@ const ProductsPage = () => {
                         className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setFilters({...filters, featured: false})}
                       >
-                        &times;
+                        <FaTimes size={12} />
                       </button>
                     </span>
                   )}
@@ -323,23 +279,30 @@ const ProductsPage = () => {
                         className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setFilters({...filters, onSale: false})}
                       >
-                        &times;
+                        <FaTimes size={12} />
                       </button>
                     </span>
                   )}
                   
                   {(priceRange.min || priceRange.max) && (
                     <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
-                      价格: {priceRange.min ? `¥${priceRange.min}` : '0'} - {priceRange.max ? `¥${priceRange.max}` : '无上限'}
+                      价格: ¥{priceRange.min || '0'} - ¥{priceRange.max || '∞'}
                       <button 
                         className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setPriceRange({ min: '', max: '' })}
                       >
-                        &times;
+                        <FaTimes size={12} />
                       </button>
                     </span>
                   )}
                 </div>
+                
+                <button 
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 text-sm font-medium rounded-lg transition-colors"
+                  onClick={resetFilters}
+                >
+                  重置过滤
+                </button>
               </div>
             )}
           </div>
