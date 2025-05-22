@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaFilter, FaSort, FaArrowLeft } from 'react-icons/fa';
+import { FaFilter, FaSort, FaArrowLeft, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import ProductCard from '@/app/components/ProductCard';
 
 // 模拟分类数据
@@ -80,6 +80,10 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
   const [showFeatured, setShowFeatured] = useState(false);
   const [showOnSale, setShowOnSale] = useState(false);
   
+  // 添加过滤面板展开状态
+  const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
+  const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
+  
   useEffect(() => {
     // 设置分类信息
     const category = categoriesData[slug as keyof typeof categoriesData];
@@ -136,6 +140,14 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
   
   const displayProducts = filteredAndSortedProducts();
   
+  // 重置所有过滤条件
+  const resetFilters = () => {
+    setShowInStock(false);
+    setShowFeatured(false);
+    setShowOnSale(false);
+    setPriceRange({ min: '', max: '' });
+  };
+  
   return (
     <div className="min-h-screen">
       {/* 分类头部 */}
@@ -182,180 +194,38 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
             </ol>
           </nav>
           
-          <div className="flex flex-col md:flex-row gap-8">
-            {/* 过滤器 - 移动 */}
-            <div className="md:hidden w-full mb-6">
-              <div className="glass-card p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold">过滤</h3>
-                  <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
-                    <FaFilter />
-                  </button>
-                </div>
-                
-                {/* 移动端过滤器内容 */}
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="block mb-2 text-sm font-medium">价格区间</label>
-                    <div className="flex space-x-4">
-                      <input
-                        type="number"
-                        placeholder="最低"
-                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        value={priceRange.min}
-                        onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
-                      />
-                      <input
-                        type="number"
-                        placeholder="最高"
-                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        value={priceRange.max}
-                        onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="mobile-in-stock"
-                        className="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                        checked={showInStock}
-                        onChange={() => setShowInStock(!showInStock)}
-                      />
-                      <label htmlFor="mobile-in-stock" className="ml-2 text-gray-700 dark:text-gray-200">
-                        有货
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="mobile-featured"
-                        className="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                        checked={showFeatured}
-                        onChange={() => setShowFeatured(!showFeatured)}
-                      />
-                      <label htmlFor="mobile-featured" className="ml-2 text-gray-700 dark:text-gray-200">
-                        特色商品
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="mobile-on-sale"
-                        className="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                        checked={showOnSale}
-                        onChange={() => setShowOnSale(!showOnSale)}
-                      />
-                      <label htmlFor="mobile-on-sale" className="ml-2 text-gray-700 dark:text-gray-200">
-                        优惠商品
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 过滤器 - 桌面 */}
-            <div className="hidden md:block w-full md:w-64 h-fit">
-              <div className="glass-card p-6 sticky top-24">
-                <h3 className="text-xl font-semibold mb-6">过滤</h3>
-                
-                <div className="mb-6">
-                  <h4 className="text-lg font-medium mb-3">价格区间</h4>
-                  <div className="flex space-x-4">
-                    <input
-                      type="number"
-                      placeholder="最低"
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      value={priceRange.min}
-                      onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
-                    />
-                    <input
-                      type="number"
-                      placeholder="最高"
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      value={priceRange.max}
-                      onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
-                    />
-                  </div>
-                </div>
-                
-                <div className="mb-6">
-                  <h4 className="text-lg font-medium mb-3">商品状态</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="in-stock"
-                        className="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                        checked={showInStock}
-                        onChange={() => setShowInStock(!showInStock)}
-                      />
-                      <label htmlFor="in-stock" className="ml-2 text-gray-700 dark:text-gray-200">
-                        有货
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="featured"
-                        className="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                        checked={showFeatured}
-                        onChange={() => setShowFeatured(!showFeatured)}
-                      />
-                      <label htmlFor="featured" className="ml-2 text-gray-700 dark:text-gray-200">
-                        特色商品
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="on-sale"
-                        className="w-4 h-4 text-primary-500 focus:ring-primary-500"
-                        checked={showOnSale}
-                        onChange={() => setShowOnSale(!showOnSale)}
-                      />
-                      <label htmlFor="on-sale" className="ml-2 text-gray-700 dark:text-gray-200">
-                        优惠商品
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col gap-3">
+          {/* 顶部水平过滤栏 */}
+          <div className="glass-card p-6 mb-8 rounded-xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold mb-4 md:mb-0">过滤与排序</h3>
+              
+              <div className="flex flex-wrap gap-3">
+                {/* 快速过滤标签 */}
+                <div className="flex flex-wrap gap-2">
                   <button 
-                    className="w-full py-2 px-4 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
-                    onClick={() => {
-                      setShowInStock(false);
-                      setShowFeatured(false);
-                      setShowOnSale(false);
-                      setPriceRange({ min: '', max: '' });
-                    }}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${showInStock ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
+                    onClick={() => setShowInStock(!showInStock)}
                   >
-                    重置过滤
+                    有货
                   </button>
-                  <Link 
-                    href="/categories" 
-                    className="flex items-center justify-center text-primary-500 hover:text-primary-600 transition-colors"
+                  <button 
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${showFeatured ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
+                    onClick={() => setShowFeatured(!showFeatured)}
                   >
-                    <FaArrowLeft className="mr-2" /> 返回所有分类
-                  </Link>
+                    特色商品
+                  </button>
+                  <button 
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${showOnSale ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
+                    onClick={() => setShowOnSale(!showOnSale)}
+                  >
+                    优惠商品
+                  </button>
                 </div>
-              </div>
-            </div>
-            
-            {/* 产品网格 */}
-            <div className="flex-1">
-              <div className="flex justify-between items-center mb-8">
-                <p className="text-gray-700 dark:text-gray-200">
-                  显示 <span className="font-semibold">{displayProducts.length}</span> 个结果
-                </p>
-                <div className="flex items-center space-x-2">
-                  <span className="hidden md:inline text-gray-700 dark:text-gray-200">排序:</span>
+                
+                {/* 排序下拉框 */}
+                <div className="relative z-10">
                   <select 
-                    className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="min-w-[150px] px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                     value={sortOrder}
                     onChange={(e) => setSortOrder(e.target.value)}
                   >
@@ -366,56 +236,182 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
                   </select>
                 </div>
               </div>
+            </div>
+            
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* 价格区间过滤器 */}
+              <div className="relative">
+                <button 
+                  className="w-full flex items-center justify-between px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
+                >
+                  <span>价格区间</span>
+                  {isPriceFilterOpen ? <FaChevronUp /> : <FaChevronDown />}
+                </button>
+                
+                {isPriceFilterOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-white dark:bg-gray-800 shadow-lg rounded-lg z-20">
+                    <div className="flex space-x-4">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">最低价格</label>
+                        <input
+                          type="number"
+                          placeholder="最低"
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          value={priceRange.min}
+                          onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">最高价格</label>
+                        <input
+                          type="number"
+                          placeholder="最高"
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          value={priceRange.max}
+                          onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end mt-4">
+                      <button 
+                        className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"
+                        onClick={() => setIsPriceFilterOpen(false)}
+                      >
+                        应用
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
               
-              {displayProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {displayProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
+              {/* 额外操作 */}
+              <div className="flex justify-end space-x-4">
+                <button 
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium rounded-lg transition-colors flex items-center"
+                  onClick={resetFilters}
+                >
+                  重置过滤
+                </button>
+                <Link 
+                  href="/categories" 
+                  className="px-4 py-2 border border-primary-500 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 font-medium rounded-lg transition-colors flex items-center"
+                >
+                  <FaArrowLeft className="mr-2" /> 返回所有分类
+                </Link>
+              </div>
+            </div>
+            
+            {/* 激活的过滤条件展示 */}
+            {(showInStock || showFeatured || showOnSale || priceRange.min || priceRange.max) && (
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">激活的过滤条件:</span>
+                  
+                  {showInStock && (
+                    <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
+                      有货
+                      <button 
+                        className="ml-2 text-primary-400 hover:text-primary-600"
+                        onClick={() => setShowInStock(false)}
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  )}
+                  
+                  {showFeatured && (
+                    <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
+                      特色商品
+                      <button 
+                        className="ml-2 text-primary-400 hover:text-primary-600"
+                        onClick={() => setShowFeatured(false)}
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  )}
+                  
+                  {showOnSale && (
+                    <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
+                      优惠商品
+                      <button 
+                        className="ml-2 text-primary-400 hover:text-primary-600"
+                        onClick={() => setShowOnSale(false)}
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  )}
+                  
+                  {(priceRange.min || priceRange.max) && (
+                    <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
+                      价格: {priceRange.min ? `¥${priceRange.min}` : '0'} - {priceRange.max ? `¥${priceRange.max}` : '无上限'}
+                      <button 
+                        className="ml-2 text-primary-400 hover:text-primary-600"
+                        onClick={() => setPriceRange({ min: '', max: '' })}
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  )}
                 </div>
-              ) : (
-                <div className="glass-card p-10 text-center">
-                  <h3 className="text-xl font-semibold mb-4">没有找到商品</h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    您的过滤条件没有匹配的商品，请尝试调整过滤条件。
-                  </p>
-                  <button
-                    onClick={() => {
-                      setShowInStock(false);
-                      setShowFeatured(false);
-                      setShowOnSale(false);
-                      setPriceRange({ min: '', max: '' });
-                    }}
-                    className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"
-                  >
-                    重置过滤
+              </div>
+            )}
+          </div>
+          
+          {/* 产品网格 */}
+          <div className="w-full">
+            <div className="flex justify-between items-center mb-8">
+              <p className="text-gray-700 dark:text-gray-200">
+                显示 <span className="font-semibold">{displayProducts.length}</span> 个结果
+              </p>
+            </div>
+            
+            {displayProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {displayProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <div className="glass-card p-10 text-center">
+                <h3 className="text-xl font-semibold mb-4">没有找到商品</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                  您的过滤条件没有匹配的商品，请尝试调整过滤条件。
+                </p>
+                <button
+                  onClick={resetFilters}
+                  className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"
+                >
+                  重置过滤
+                </button>
+              </div>
+            )}
+            
+            {/* 分页 */}
+            {displayProducts.length > 0 && (
+              <div className="mt-12 flex justify-center">
+                <div className="flex space-x-2">
+                  <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                    &lt;
+                  </button>
+                  <button className="w-10 h-10 flex items-center justify-center rounded-full bg-primary-500 text-white">
+                    1
+                  </button>
+                  <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                    2
+                  </button>
+                  <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                    3
+                  </button>
+                  <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                    &gt;
                   </button>
                 </div>
-              )}
-              
-              {/* 分页 */}
-              {displayProducts.length > 0 && (
-                <div className="mt-12 flex justify-center">
-                  <div className="flex space-x-2">
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                      &lt;
-                    </button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-primary-500 text-white">
-                      1
-                    </button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                      2
-                    </button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                      3
-                    </button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                      &gt;
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
