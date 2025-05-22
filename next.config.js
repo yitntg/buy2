@@ -2,10 +2,7 @@
 const nextConfig = {
   images: {
     domains: [
-      'picsum.photos',
-      'placehold.co',
-      'images.unsplash.com',
-      'via.placeholder.com'
+      'pzjhupjfojvlbthnsgqt.supabase.co'
     ],
   },
   experimental: {
