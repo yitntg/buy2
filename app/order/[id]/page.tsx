@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { FaCheckCircle, FaBox, FaTruck, FaHome } from 'react-icons/fa';
+import SafeImage from '@/app/components/SafeImage';
 
 // 模拟订单状态
 const ORDER_STATUS = {
@@ -111,6 +111,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
   
   useEffect(() => {
     const getOrderData = async () => {
@@ -128,6 +129,39 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
     
     getOrderData();
   }, [params.id]);
+  
+  // 取消订单
+  const handleCancelOrder = async () => {
+    if (!confirm('确定要取消此订单吗？此操作无法撤销。')) {
+      return;
+    }
+    
+    try {
+      setIsCancelling(true);
+      
+      const response = await fetch('/api/orders/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: params.id })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '取消订单失败');
+      }
+      
+      // 刷新订单数据
+      const updatedOrder = { ...order, status: 'cancelled', status_text: '已取消' };
+      setOrder(updatedOrder);
+      
+      alert('订单已成功取消');
+    } catch (error: any) {
+      console.error('取消订单失败:', error);
+      alert(error.message || '取消订单失败，请稍后重试');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
   
   if (loading) {
     return (
@@ -235,11 +269,10 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                     <td className="py-4 px-4">
                       <div className="flex items-center">
                         <div className="w-16 h-16 rounded-md overflow-hidden relative flex-shrink-0">
-                          <Image 
+                          <SafeImage 
                             src={item.image_url} 
                             alt={item.product_name} 
                             fill
-                            style={{ objectFit: 'cover' }}
                           />
                         </div>
                         <div className="ml-4">
@@ -257,9 +290,22 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           </div>
           
           <div className="flex justify-between flex-wrap gap-4">
-            <Link href="/account?tab=orders" className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium rounded-lg transition-colors">
-              返回订单列表
-            </Link>
+            <div className="flex gap-3">
+              <Link href="/account?tab=orders" className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium rounded-lg transition-colors">
+                返回订单列表
+              </Link>
+              
+              {/* 只有特定状态的订单才显示取消按钮 */}
+              {order.status === ORDER_STATUS.PAID && (
+                <button
+                  onClick={handleCancelOrder}
+                  disabled={isCancelling}
+                  className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCancelling ? '处理中...' : '取消订单'}
+                </button>
+              )}
+            </div>
             
             <Link href="/products" className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors">
               继续购物

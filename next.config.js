@@ -1,7 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['cdn.pixabay.com', 'images.unsplash.com', 'placeholder.pics']
+    domains: [
+      'picsum.photos',
+      'placehold.co',
+      'images.unsplash.com',
+      'via.placeholder.com'
+    ],
   },
   experimental: {
     serverActions: true
