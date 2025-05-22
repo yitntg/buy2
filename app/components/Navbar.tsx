@@ -192,7 +192,7 @@ const Navbar = () => {
                       {categories.map(category => (
                         <Link
                           key={category.id}
-                          href={`/categories/${category.id}`}
+                          href={`/products?category=${category.id}`}
                           className="group block rounded-lg overflow-hidden hover:shadow-lg transition-all border border-transparent hover:border-primary-500"
                           onClick={() => setIsProductsMenuOpen(false)}
                         >

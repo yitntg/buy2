@@ -106,7 +106,7 @@ export default function CategoriesPage() {
                       查看产品
                     </Link>
                     <Link 
-                      href={`/categories/${category.id}`}
+                      href={`/products?category=${category.id}`}
                       className="inline-flex items-center text-primary-500 hover:text-primary-600 transition-colors"
                     >
                       浏览分类 <FaArrowRight className="ml-2" />
