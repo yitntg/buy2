@@ -7,6 +7,7 @@ import { FaTrash, FaArrowLeft, FaLock, FaCheck, FaTimes, FaMinus, FaPlus } from 
 import { useCartStore } from '@/app/lib/store';
 import { Coupon, Product } from '@/app/lib/types';
 import { supabase } from '@/app/lib/supabase';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 // 模拟优惠券数据库，实际应从API获取
 const mockCoupons: Coupon[] = [
@@ -54,6 +55,7 @@ const CartPage = () => {
   const [couponMessage, setCouponMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   
   const { subtotal, discount, shipping, total } = getCartTotal();
   
@@ -98,9 +100,28 @@ const CartPage = () => {
     fetchCartItems();
   }, [items]);
   
-  const handleQuantityChange = (id: string, newQuantity: number) => {
-    if (newQuantity >= 1) {
-      updateQuantity(id, newQuantity);
+  const handleQuantityChange = async (productId: number, newQuantity: number) => {
+    try {
+      if (newQuantity < 0 || !user) return;
+      
+      const { error } = await supabase
+        .from('cart_items')
+        .update({ quantity: newQuantity })
+        .eq('product_id', productId)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      // 更新本地状态
+      setCartItems(prev => 
+        prev.map(item => 
+          item.product.id === productId 
+            ? { ...item, quantity: newQuantity }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error('Error updating quantity:', error);
     }
   };
   
@@ -150,6 +171,25 @@ const CartPage = () => {
     removeCoupon();
     setCouponCode('');
     setCouponMessage(null);
+  };
+  
+  const handleRemoveItem = async (productId: number) => {
+    try {
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('product_id', productId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // 更新本地状态
+      setCartItems(prev => prev.filter(item => item.product.id !== productId));
+    } catch (error) {
+      console.error('Error removing item:', error);
+    }
   };
   
   if (loading) {
@@ -241,7 +281,7 @@ const CartPage = () => {
                         </button>
                       </div>
                       <button
-                        onClick={() => removeFromCart(item.product.id)}
+                        onClick={() => handleRemoveItem(item.product.id)}
                         className="text-red-500 hover:text-red-600 transition-colors"
                       >
                         <FaTrash />
