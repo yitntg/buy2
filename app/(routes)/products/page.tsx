@@ -152,7 +152,7 @@ const ProductsPage = () => {
     } else if (sortOrder === 'price-high') {
       filtered.sort((a, b) => b.price - a.price);
     } else if (sortOrder === 'newest') {
-      filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      filtered.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
     }
     
     return filtered;
