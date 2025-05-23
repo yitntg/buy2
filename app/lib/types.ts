@@ -4,13 +4,20 @@ export interface Product {
   description: string;
   price: number;
   original_price?: number;
-  image_url: string;
-  category: string;
+  category_id: string;
   is_featured: boolean;
   is_new: boolean;
   stock_quantity: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface ProductImage {
+  id: string;
+  product_id: string;
+  image_url: string;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface Category {
