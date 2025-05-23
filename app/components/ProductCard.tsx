@@ -29,7 +29,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         .from('product_images')
         .select('*')
         .eq('product_id', product.id)
-        .eq('type', 'image')
         .order('sort_order', { ascending: true })
         .limit(1)
         .single();
