@@ -3,35 +3,28 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  category: number;
-  stock_quantity: number;
-  image_url?: string;
-  is_featured?: boolean;
   original_price?: number;
+  stock_quantity: number;
+  category: number;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface ProductImage {
-  id: string;
-  product_id: string;
+  id: number;
+  product_id: number;
   image_url: string;
-  type?: 'image' | 'video';  // 媒体类型
-  format?: string;  // 文件格式，如jpg、png、mp4等
-  width?: number;
-  height?: number;
-  duration?: number;  // 视频时长（秒）
-  thumbnail_url?: string;  // 视频缩略图
+  thumbnail_url?: string;
+  type: 'image' | 'video';
   sort_order: number;
-  created_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Category {
   id: number;
   name: string;
-  description: string;
-  image_url?: string;
-  itemCount?: number;
+  description?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -45,10 +38,17 @@ export interface User {
 
 export interface CartItem {
   id: string;
-  product_id: string;
+  product_id: number;
   quantity: number;
   user_id: string;
-  product?: Product;
+  product: Product;
+}
+
+export interface WishlistItem {
+  id: string;
+  product_id: number;
+  user_id: string;
+  product: Product;
 }
 
 export interface Order {
@@ -74,10 +74,14 @@ export interface OrderItem {
 export interface Coupon {
   id: string;
   code: string;
-  type: 'percentage' | 'fixed';
-  value: number;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
   min_purchase?: number;
+  start_date: string;
+  end_date: string;
   is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Address {

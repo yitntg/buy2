@@ -2,12 +2,20 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { CartItem, Product, Coupon } from './types';
 
-interface CartStore {
+export interface CartItem {
+  id: string;
+  product_id: number;
+  quantity: number;
+  user_id: string;
+  product: Product;
+}
+
+export interface CartStore {
   items: CartItem[];
   coupon: Coupon | null;
   addToCart: (product: Product, quantity?: number) => void;
-  removeFromCart: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  removeFromCart: (productId: number) => void;
+  updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
   applyCoupon: (coupon: Coupon) => void;
   removeCoupon: () => void;
@@ -25,62 +33,75 @@ export const useCartStore = create<CartStore>()(
       items: [],
       coupon: null,
       
-      addToCart: (product, quantity = 1) => 
+      addToCart: (product, quantity = 1) =>
         set((state) => {
           // 检查库存
           const availableStock = product.stock_quantity;
           
+          // 检查是否已经在购物车中
           const existingItem = state.items.find(item => item.product_id === product.id);
           
           if (existingItem) {
-            // 确保不超过库存
-            const newQuantity = Math.min(existingItem.quantity + quantity, availableStock);
+            // 如果已经在购物车中，检查增加数量后是否超过库存
+            const newQuantity = existingItem.quantity + quantity;
+            if (newQuantity > availableStock) {
+              console.warn('Cannot add more items than available stock');
+              return state;
+            }
             
+            // 更新数量
             return {
-              items: state.items.map(item => 
+              items: state.items.map(item =>
                 item.product_id === product.id
                   ? { ...item, quantity: newQuantity }
                   : item
-              ),
+              )
+            };
+          } else {
+            // 如果是新商品，检查数量是否超过库存
+            if (quantity > availableStock) {
+              console.warn('Cannot add more items than available stock');
+              return state;
+            }
+            
+            // 添加新商品
+            const newItem: CartItem = {
+              id: Math.random().toString(36).substr(2, 9),
+              product_id: product.id,
+              quantity,
+              user_id: 'current-user', // 这里应该使用实际的用户ID
+              product
+            };
+            
+            return {
+              items: [...state.items, newItem]
             };
           }
-          
-          const newQuantity = Math.min(quantity, availableStock);
-          
-          return {
-            items: [
-              ...state.items,
-              {
-                id: Math.random().toString(36).substring(2, 9), // 临时ID
-                product_id: product.id,
-                quantity: newQuantity,
-                user_id: '', // 临时用户ID，实际应该从身份验证获取
-                product,
-              },
-            ],
-          };
         }),
       
-      removeFromCart: (id) => 
+      removeFromCart: (productId) =>
         set((state) => ({
-          items: state.items.filter(item => item.product_id !== id),
+          items: state.items.filter(item => item.product_id !== productId)
         })),
       
-      updateQuantity: (id, quantity) => 
+      updateQuantity: (productId, quantity) =>
         set((state) => {
-          const item = state.items.find(item => item.product_id === id);
+          const item = state.items.find(item => item.product_id === productId);
           if (!item) return state;
           
-          // 确保数量不超过库存
-          const availableStock = item.product?.stock_quantity || 1;
-          const newQuantity = Math.min(Math.max(1, quantity), availableStock);
+          // 检查库存
+          const availableStock = item.product.stock_quantity;
+          if (quantity > availableStock) {
+            console.warn('Cannot update quantity to more than available stock');
+            return state;
+          }
           
           return {
-            items: state.items.map(item => 
-              item.product_id === id
-                ? { ...item, quantity: newQuantity }
+            items: state.items.map(item =>
+              item.product_id === productId
+                ? { ...item, quantity }
                 : item
-            ),
+            )
           };
         }),
       
@@ -127,10 +148,18 @@ export const useCartStore = create<CartStore>()(
   )
 );
 
-interface WishlistStore {
-  items: Product[];
+// 收藏夹存储
+export interface WishlistItem {
+  id: string;
+  product_id: number;
+  user_id: string;
+  product: Product;
+}
+
+export interface WishlistStore {
+  items: WishlistItem[];
   addToWishlist: (product: Product) => void;
-  removeFromWishlist: (id: string) => void;
+  removeFromWishlist: (productId: number) => void;
   clearWishlist: () => void;
 }
 
@@ -138,25 +167,32 @@ export const useWishlistStore = create<WishlistStore>()(
   persist(
     (set) => ({
       items: [],
-      addToWishlist: (product) => 
+      
+      addToWishlist: (product) =>
         set((state) => {
-          const existingItem = state.items.find(item => item.id === product.id);
-          
-          if (existingItem) {
+          // 检查是否已经在收藏夹中
+          if (state.items.some(item => item.product_id === product.id)) {
             return state;
           }
           
+          const newItem: WishlistItem = {
+            id: Math.random().toString(36).substr(2, 9),
+            product_id: product.id,
+            user_id: 'current-user', // 这里应该使用实际的用户ID
+            product
+          };
+          
           return {
-            items: [...state.items, product],
+            items: [...state.items, newItem]
           };
         }),
       
-      removeFromWishlist: (id) => 
+      removeFromWishlist: (productId) =>
         set((state) => ({
-          items: state.items.filter(item => item.id !== id),
+          items: state.items.filter(item => item.product_id !== productId)
         })),
       
-      clearWishlist: () => set({ items: [] }),
+      clearWishlist: () => set({ items: [] })
     }),
     {
       name: 'wishlist-storage', // localStorage 的键名
