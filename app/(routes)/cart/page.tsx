@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaTrash, FaArrowLeft, FaLock, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaTrash, FaArrowLeft, FaLock, FaCheck, FaTimes, FaMinus, FaPlus } from 'react-icons/fa';
 import { useCartStore } from '@/app/lib/store';
-import { Coupon } from '@/app/lib/types';
+import { Coupon, Product } from '@/app/lib/types';
+import { supabase } from '@/app/lib/supabase';
 
 // 模拟优惠券数据库，实际应从API获取
 const mockCoupons: Coupon[] = [
@@ -34,10 +35,25 @@ const mockCoupons: Coupon[] = [
   }
 ];
 
+interface CartItem {
+  id: string;
+  product: Product;
+  quantity: number;
+  productImage?: string;
+}
+
+interface StoreCartItem {
+  id: string;
+  product: Product;
+  quantity: number;
+}
+
 const CartPage = () => {
   const { items, removeFromCart, updateQuantity, clearCart, coupon, applyCoupon, removeCoupon, getCartTotal } = useCartStore();
   const [couponCode, setCouponCode] = useState('');
   const [couponMessage, setCouponMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const { subtotal, discount, shipping, total } = getCartTotal();
   
@@ -51,6 +67,36 @@ const CartPage = () => {
       });
     }
   }, [coupon]);
+  
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      const itemsWithImages = await Promise.all(
+        items
+          .filter((item): item is typeof item & { product: Product } => item.product !== undefined)
+          .map(async (item) => {
+            // 获取商品图片
+            const { data: imageData } = await supabase
+              .from('product_images')
+              .select('image_url')
+              .eq('product_id', item.product.id)
+              .order('sort_order', { ascending: true })
+              .limit(1)
+              .single();
+
+            return {
+              id: item.id,
+              product: item.product,
+              quantity: item.quantity,
+              productImage: imageData?.image_url || '/no-image.png'
+            };
+          })
+      );
+      setCartItems(itemsWithImages);
+      setLoading(false);
+    };
+
+    fetchCartItems();
+  }, [items]);
   
   const handleQuantityChange = (id: string, newQuantity: number) => {
     if (newQuantity >= 1) {
@@ -106,16 +152,28 @@ const CartPage = () => {
     setCouponMessage(null);
   };
   
-  if (items.length === 0) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary-500"></div>
+      </div>
+    );
+  }
+
+  if (cartItems.length === 0) {
     return (
       <div className="min-h-screen py-16 px-6 md:px-10">
         <div className="container mx-auto max-w-4xl">
-          <div className="glass-card p-10 text-center">
-            <h1 className="text-3xl font-bold mb-6">您的购物车是空的</h1>
-            <p className="text-lg mb-8 text-gray-600 dark:text-gray-300">
-              看起来您还没有添加任何商品到购物车。
+          <div className="text-center py-16">
+            <h1 className="text-2xl font-bold mb-4">购物车是空的</h1>
+            <p className="text-gray-500 dark:text-gray-400 mb-8">
+              快去添加一些商品吧！
             </p>
-            <Link href="/products" className="px-8 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-full transition-all transform hover:scale-105 hover:shadow-lg inline-block">
+            <Link 
+              href="/products" 
+              className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"
+            >
+              <FaArrowLeft className="mr-2" />
               继续购物
             </Link>
           </div>
@@ -148,88 +206,54 @@ const CartPage = () => {
                 </div>
               </div>
               
-              {items.map((item) => (
-                <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 py-6 border-b border-gray-200 dark:border-gray-700 last:border-0">
-                  {/* 移动视图标题 */}
-                  <div className="md:hidden text-lg font-semibold mb-2">
-                    {item.product?.name}
+              {cartItems.map((item) => (
+                <div key={item.id} className="flex items-start gap-4 py-4 border-b border-gray-200 dark:border-gray-700 last:border-0">
+                  <div className="w-20 h-20 rounded-lg overflow-hidden relative flex-shrink-0">
+                    <Image 
+                      src={item.productImage || '/no-image.png'} 
+                      alt={item.product.name} 
+                      fill
+                      style={{ objectFit: 'cover' }}
+                    />
                   </div>
                   
-                  {/* 商品 */}
-                  <div className="col-span-1 md:col-span-6 flex items-center">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden relative flex-shrink-0">
-                      <Image 
-                        src={item.product?.image_url || 'https://via.placeholder.com/150'} 
-                        alt={item.product?.name || 'Product'} 
-                        fill
-                        style={{ objectFit: 'cover' }}
-                      />
-                    </div>
-                    <div className="ml-4 flex-1 hidden md:block">
-                      <h3 className="text-lg font-semibold">
-                        <Link href={`/products/${item.product_id}`} className="hover:text-primary-500 transition-colors">
-                          {item.product?.name}
-                        </Link>
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        类别: {item.product?.category.replace('category-', '').replace(/^w/, c => c.toUpperCase())}
-                      </p>
-                      {item.quantity >= (item.product?.stock_quantity || 0) && (
-                        <p className="text-sm text-yellow-500 mt-1">
-                          已达最大库存
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* 价格 */}
-                  <div className="col-span-1 md:col-span-2 flex items-center md:justify-center">
-                    <div className="md:hidden">价格:</div>
-                    <div className="ml-auto md:ml-0">¥{item.product?.price.toFixed(2)}</div>
-                  </div>
-                  
-                  {/* 数量 */}
-                  <div className="col-span-1 md:col-span-2 flex items-center md:justify-center">
-                    <div className="flex items-center">
-                      <div className="md:hidden mr-2">数量:</div>
-                      <div className="flex border border-gray-300 dark:border-gray-700 rounded-lg">
-                        <button 
-                          onClick={() => handleQuantityChange(item.product_id, item.quantity - 1)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-l-lg"
+                  <div className="flex-1">
+                    <Link 
+                      href={`/products/${item.product.id}`}
+                      className="text-lg font-medium hover:text-primary-500 transition-colors"
+                    >
+                      {item.product.name}
+                    </Link>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleQuantityChange(item.product.id, Math.max(0, item.quantity - 1))}
+                          className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
                         >
-                          -
+                          <FaMinus className="text-sm" />
                         </button>
-                        <input
-                          type="number"
-                          min="1"
-                          max={item.product?.stock_quantity}
-                          value={item.quantity}
-                          onChange={(e) => handleQuantityChange(item.product_id, parseInt(e.target.value) || 1)}
-                          className="w-10 text-center border-none bg-transparent focus:outline-none focus:ring-0"
-                        />
-                        <button 
-                          onClick={() => handleQuantityChange(item.product_id, item.quantity + 1)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-r-lg"
-                          disabled={item.quantity >= (item.product?.stock_quantity || 0)}
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <button
+                          onClick={() => handleQuantityChange(item.product.id, item.quantity + 1)}
+                          className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
                         >
-                          +
+                          <FaPlus className="text-sm" />
                         </button>
                       </div>
+                      <button
+                        onClick={() => removeFromCart(item.product.id)}
+                        className="text-red-500 hover:text-red-600 transition-colors"
+                      >
+                        <FaTrash />
+                      </button>
                     </div>
                   </div>
                   
-                  {/* 小计和删除按钮 */}
-                  <div className="col-span-1 md:col-span-2 flex items-center justify-between md:justify-end">
-                    <div className="flex items-center">
-                      <div className="md:hidden mr-2">小计:</div>
-                      <div className="font-semibold">¥{((item.product?.price || 0) * item.quantity).toFixed(2)}</div>
-                    </div>
-                    <button 
-                      onClick={() => removeFromCart(item.product_id)}
-                      className="ml-4 text-red-500 hover:text-red-600 transition-colors"
-                    >
-                      <FaTrash />
-                    </button>
+                  <div className="text-right">
+                    <p className="font-medium">¥{item.product.price.toFixed(2)}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      小计: ¥{(item.product.price * item.quantity).toFixed(2)}
+                    </p>
                   </div>
                 </div>
               ))}
