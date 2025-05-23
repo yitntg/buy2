@@ -10,15 +10,6 @@ import { supabase } from '@/app/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { Category } from '@/app/lib/types';
 
-// 模拟用户数据 - 用于测试，与AccountPage中保持一致
-const mockUser = {
-  id: 'test-user-id',
-  email: 'test@example.com',
-  user_metadata: {
-    full_name: '测试用户'
-  }
-};
-
 const Navbar = () => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -54,12 +45,6 @@ const Navbar = () => {
 
   // 获取用户认证状态
   useEffect(() => {
-    // ===== 测试模式：使用模拟用户数据 =====
-    setUser(mockUser as any);
-    setLoading(false);
-    
-    // ===== 原始认证代码（暂时注释) =====
-    /*
     const getUser = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -83,7 +68,6 @@ const Navbar = () => {
     return () => {
       subscription.unsubscribe();
     };
-    */
   }, []);
 
   useEffect(() => {

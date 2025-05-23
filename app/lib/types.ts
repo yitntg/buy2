@@ -40,9 +40,9 @@ export interface Order {
   id: string;
   user_id: string;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  total_amount: number;
-  shipping_address: string;
-  payment_intent_id?: string;
+  total: number;
+  items: number;
+  date: string;
   created_at: string;
   updated_at: string;
 }

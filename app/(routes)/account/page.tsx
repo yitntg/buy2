@@ -7,54 +7,16 @@ import Image from 'next/image';
 import { FaUser, FaShoppingBag, FaHeart, FaCog, FaSignOutAlt } from 'react-icons/fa';
 import { supabase } from '@/app/lib/supabase';
 import { User } from '@supabase/supabase-js';
-
-// 模拟订单数据
-const mockOrders = [
-  {
-    id: 'order-1',
-    date: '2023-11-15',
-    status: 'delivered',
-    total: 599,
-    items: 3
-  },
-  {
-    id: 'order-2',
-    date: '2023-12-02',
-    status: 'processing',
-    total: 899,
-    items: 2
-  },
-  {
-    id: 'order-3',
-    date: '2024-01-10',
-    status: 'shipped',
-    total: 349,
-    items: 1
-  },
-];
-
-// 模拟用户数据 - 用于测试
-const mockUser = {
-  id: 'test-user-id',
-  email: 'test@example.com',
-  user_metadata: {
-    full_name: '测试用户'
-  }
-};
+import { Order } from '@/app/lib/types';
 
 export default function AccountPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    // ===== 测试模式：使用模拟用户数据 =====
-    setUser(mockUser as any);
-    setLoading(false);
-    
-    // ===== 原始认证代码（暂时注释) =====
-    /*
     const getUser = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -66,6 +28,17 @@ export default function AccountPage() {
         }
         
         setUser(user);
+        
+        // 获取用户订单
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+          
+        if (!orderError && orderData) {
+          setOrders(orderData);
+        }
       } catch (error) {
         console.error('Error fetching user:', error);
       } finally {
@@ -74,22 +47,15 @@ export default function AccountPage() {
     };
 
     getUser();
-    */
   }, [router]);
 
   const handleSignOut = async () => {
-    // 测试模式：简单重定向到首页
-    router.push('/');
-    
-    // 原始退出登录代码（暂时注释）
-    /*
     try {
       await supabase.auth.signOut();
       router.push('/');
     } catch (error) {
       console.error('Error signing out:', error);
     }
-    */
   };
 
   // 用户还未加载时显示加载状态
@@ -224,7 +190,7 @@ export default function AccountPage() {
                       </Link>
                     </div>
                     
-                    {mockOrders.length > 0 ? (
+                    {orders.length > 0 ? (
                       <div className="overflow-x-auto">
                         <table className="min-w-full">
                           <thead>
@@ -237,7 +203,7 @@ export default function AccountPage() {
                             </tr>
                           </thead>
                           <tbody>
-                            {mockOrders.slice(0, 3).map((order) => (
+                            {orders.slice(0, 3).map((order) => (
                               <tr key={order.id} className="border-b border-gray-200 dark:border-gray-700">
                                 <td className="py-4 text-sm font-medium">{order.id}</td>
                                 <td className="py-4 text-sm text-gray-500 dark:text-gray-400">{order.date}</td>
@@ -276,7 +242,7 @@ export default function AccountPage() {
                 <div>
                   <h2 className="text-xl font-semibold mb-6">我的订单</h2>
                   
-                  {mockOrders.length > 0 ? (
+                  {orders.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="min-w-full">
                         <thead>
@@ -290,7 +256,7 @@ export default function AccountPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {mockOrders.map((order) => (
+                          {orders.map((order) => (
                             <tr key={order.id} className="border-b border-gray-200 dark:border-gray-700">
                               <td className="py-4 text-sm font-medium">{order.id}</td>
                               <td className="py-4 text-sm text-gray-500 dark:text-gray-400">{order.date}</td>
