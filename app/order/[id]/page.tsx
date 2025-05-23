@@ -60,18 +60,13 @@ export default function OrderPage({ params }: { params: { id: string } }) {
         if (orderError) throw orderError;
         
         if (orderData) {
-          // 获取订单项
+          // 获取订单项目
           const { data: orderItems, error: itemsError } = await supabase
             .from('order_items')
             .select(`
-              id,
-              product_id,
-              quantity,
-              price,
+              *,
               products (
-                name
-              ),
-              products:product_id (
+                name,
                 product_images (
                   image_url
                 )
@@ -96,10 +91,10 @@ export default function OrderPage({ params }: { params: { id: string } }) {
             items: orderItems?.map(item => ({
               id: item.id,
               product_id: item.product_id,
-              product_name: item.products.name,
+              product_name: item.products?.[0]?.name || 'Unknown Product',
               price: item.price,
               quantity: item.quantity,
-              image_url: item.products.product_images[0]?.image_url || '/no-image.png'
+              image_url: item.products?.[0]?.product_images?.[0]?.image_url || '/no-image.png'
             })) || [],
             shipping_address: addressData
           };

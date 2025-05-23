@@ -67,10 +67,8 @@ export interface Coupon {
   id: string;
   code: string;
   type: 'percentage' | 'fixed';
-  value: number; // 百分比折扣或固定金额
-  min_purchase?: number; // 最低消费要求
-  max_discount?: number; // 最大折扣金额
-  expiry_date?: string;
+  value: number;
+  min_purchase?: number;
   is_active: boolean;
 }
 

@@ -13,6 +13,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [productImages, setProductImages] = useState<string[]>([]);
+  const [relatedProductImages, setRelatedProductImages] = useState<{[key: string]: string}>({});
   const [loading, setLoading] = useState(true);
   
   const [quantity, setQuantity] = useState(1);
@@ -49,19 +50,38 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           if (images && images.length > 0) {
             setProductImages(images.map(img => img.image_url));
           } else {
-            setProductImages([]);
+            setProductImages(['/no-image.png']);
           }
 
           // 获取同分类的相关商品
           const { data: relatedData, error: relatedError } = await supabase
             .from('products')
             .select('*')
-            .eq('category', productData.category)
+            .eq('category_id', productData.category_id)
             .neq('id', id)
             .limit(4);
 
           if (relatedError) throw relatedError;
-          setRelatedProducts(relatedData || []);
+          if (relatedData) {
+            setRelatedProducts(relatedData);
+            
+            // 获取相关商品的图片
+            const relatedImages: {[key: string]: string} = {};
+            await Promise.all(
+              relatedData.map(async (relatedProduct) => {
+                const { data: relatedImageData } = await supabase
+                  .from('product_images')
+                  .select('image_url')
+                  .eq('product_id', relatedProduct.id)
+                  .order('sort_order', { ascending: true })
+                  .limit(1)
+                  .single();
+                
+                relatedImages[relatedProduct.id] = relatedImageData?.image_url || '/no-image.png';
+              })
+            );
+            setRelatedProductImages(relatedImages);
+          }
         }
       } catch (error) {
         console.error('Error fetching product data:', error);
@@ -149,10 +169,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <li className="flex items-center space-x-2">
               <span className="text-gray-400">/</span>
               <Link 
-                href={`/categories/${product.category}`} 
+                href={`/categories/${product.category_id}`} 
                 className="text-gray-500 hover:text-primary-500 transition-colors"
               >
-                {product.category}
+                {product.category_id}
               </Link>
             </li>
             <li className="flex items-center space-x-2">
@@ -168,20 +188,20 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           <div className="w-full lg:w-1/2">
             <div className="flex flex-col-reverse md:flex-row gap-4">
               {/* 缩略图 */}
-              <div className="flex md:flex-col gap-3 mt-4 md:mt-0">
-                {imagesToShow.map((img, index) => (
+              <div className="grid grid-cols-4 gap-4 mt-4">
+                {imagesToShow.map((imageUrl, index) => (
                   <button
                     key={index}
-                    className={`relative w-16 h-16 border-2 rounded-lg overflow-hidden ${
+                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
                       activeImageIndex === index 
-                        ? 'border-primary-500' 
-                        : 'border-transparent hover:border-gray-300'
+                        ? 'border-primary-500 scale-95' 
+                        : 'border-transparent hover:border-primary-300'
                     }`}
                     onClick={() => setActiveImageIndex(index)}
                   >
                     <Image
-                      src={img}
-                      alt={`Product thumbnail ${index + 1}`}
+                      src={imageUrl}
+                      alt={`${product.name} - 图片 ${index + 1}`}
                       fill
                       style={{ objectFit: 'cover' }}
                     />
@@ -342,7 +362,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 商品编号: {product.id}
               </span>
               <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full">
-                分类: {product.category}
+                分类: {product.category_id}
               </span>
               <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full">
                 标签: 时尚, 新品
@@ -412,7 +432,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                   <div className="relative h-64 rounded-xl overflow-hidden">
                     <Image 
-                      src={product.image_url}
+                      src={productImages[0] || '/no-image.png'}
                       alt="Product detail 1"
                       fill
                       style={{ objectFit: 'cover' }}
@@ -420,7 +440,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                   </div>
                   <div className="relative h-64 rounded-xl overflow-hidden">
                     <Image 
-                      src={product.image_url}
+                      src={productImages[1] || '/no-image.png'}
                       alt="Product detail 2"
                       fill
                       style={{ objectFit: 'cover' }}
@@ -557,43 +577,51 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
         
-        {/* 相关产品 */}
-        <div>
-          <h2 className="text-2xl font-bold mb-6">相关商品</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((relatedProduct) => (
-              <Link href={`/products/${relatedProduct.id}`} key={relatedProduct.id} className="block">
-                <div className="glass-card p-4 rounded-xl overflow-hidden hover:-translate-y-2 transition-all duration-300">
-                  <div className="relative h-48 mb-4 overflow-hidden rounded-lg">
-                    <Image 
-                      src={relatedProduct.image_url}
-                      alt={relatedProduct.name}
+        {/* 相关商品 */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold mb-8">相关商品</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProducts.map(product => (
+                <Link 
+                  key={product.id}
+                  href={`/products/${product.id}`}
+                  className="block group"
+                >
+                  <div className="relative aspect-square rounded-xl overflow-hidden mb-4">
+                    <Image
+                      src={relatedProductImages[product.id] || '/no-image.png'}
+                      alt={product.name}
                       fill
                       style={{ objectFit: 'cover' }}
-                      className="transition-transform duration-500 hover:scale-110"
+                      className="transition-all duration-300 group-hover:scale-110"
                     />
-                    {relatedProduct.is_new && (
-                      <div className="absolute top-2 left-2 z-10">
-                        <span className="px-2 py-1 bg-secondary-500 text-white text-xs font-medium rounded-full">
+                    {product.is_new && (
+                      <div className="absolute top-2 left-2">
+                        <span className="px-2 py-1 bg-secondary-500 text-white text-sm font-medium rounded-full">
                           新品
                         </span>
                       </div>
                     )}
                   </div>
-                  <h3 className="text-lg font-semibold mb-2 hover:text-primary-500 transition-colors">{relatedProduct.name}</h3>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-lg font-bold">¥{relatedProduct.price.toFixed(2)}</p>
-                      {(relatedProduct.original_price && relatedProduct.original_price > relatedProduct.price) && (
-                        <p className="text-sm text-gray-500 line-through">¥{relatedProduct.original_price.toFixed(2)}</p>
-                      )}
-                    </div>
+                  <h3 className="font-medium group-hover:text-primary-500 transition-colors">
+                    {product.name}
+                  </h3>
+                  <div className="mt-1">
+                    <span className="text-lg font-semibold text-primary-600">
+                      ¥{product.price.toFixed(2)}
+                    </span>
+                    {product.original_price && (
+                      <span className="ml-2 text-sm text-gray-500 line-through">
+                        ¥{product.original_price.toFixed(2)}
+                      </span>
+                    )}
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

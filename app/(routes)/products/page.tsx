@@ -94,7 +94,7 @@ const ProductsPage = () => {
     
     // 分类过滤（用字符串比较，防止类型不一致）
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => String(product.category) === String(selectedCategory));
+      filtered = filtered.filter(product => String(product.category_id) === String(selectedCategory));
     }
     
     // 价格区间过滤

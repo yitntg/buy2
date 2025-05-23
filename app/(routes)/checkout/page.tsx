@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { FaArrowLeft, FaShippingFast, FaCreditCard, FaShieldAlt, FaCheck } from 'react-icons/fa';
 import { useCartStore } from '@/app/lib/store';
 import { Address, PaymentMethod } from '@/app/lib/types';
+import { supabase } from '@/app/lib/supabase';
 
 // 模拟支付方式
 const paymentMethods: PaymentMethod[] = [
@@ -81,6 +82,7 @@ const CheckoutPage = () => {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [cartItemsWithImages, setCartItemsWithImages] = useState<(typeof items[0] & { productImage?: string })[]>([]);
   
   // 新地址表单状态
   const [newAddress, setNewAddress] = useState<{
@@ -112,6 +114,31 @@ const CheckoutPage = () => {
     if (items.length === 0) {
       router.push('/cart');
     }
+
+    const fetchCartItemsWithImages = async () => {
+      const itemsWithImages = await Promise.all(
+        items.map(async (item) => {
+          if (!item.product) return item;
+          
+          // 获取商品图片
+          const { data: imageData } = await supabase
+            .from('product_images')
+            .select('image_url')
+            .eq('product_id', item.product.id)
+            .order('sort_order', { ascending: true })
+            .limit(1)
+            .single();
+
+          return {
+            ...item,
+            productImage: imageData?.image_url || '/no-image.png'
+          };
+        })
+      );
+      setCartItemsWithImages(itemsWithImages);
+    };
+
+    fetchCartItemsWithImages();
   }, [items.length, router]);
   
   const handleSubmitNewAddress = (e: React.FormEvent) => {
@@ -398,15 +425,15 @@ const CheckoutPage = () => {
             </div>
             
             {/* 商品列表 */}
-            <div className="glass-card p-6 rounded-xl">
+            <div className="glass-card p-6 rounded-xl mb-6">
               <h2 className="text-xl font-semibold mb-6">商品清单</h2>
               
               <div className="space-y-4">
-                {items.map(item => (
+                {cartItemsWithImages.map(item => (
                   <div key={item.id} className="flex items-center border-b border-gray-200 dark:border-gray-700 last:border-0 pb-4 last:pb-0">
                     <div className="w-16 h-16 rounded-lg overflow-hidden relative flex-shrink-0">
                       <Image 
-                        src={item.product?.image_url || 'https://via.placeholder.com/150'} 
+                        src={item.productImage || '/no-image.png'} 
                         alt={item.product?.name || 'Product'} 
                         fill
                         style={{ objectFit: 'cover' }}
