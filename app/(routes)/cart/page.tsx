@@ -10,31 +10,16 @@ import { supabase } from '@/app/lib/supabase';
 import { useAuth } from '@/app/contexts/AuthContext';
 
 // 模拟优惠券数据库，实际应从API获取
-const mockCoupons: Coupon[] = [
-  {
-    id: 'coupon-1',
-    code: 'WELCOME10',
-    type: 'percentage',
-    value: 10,
-    min_purchase: 100,
-    is_active: true
-  },
-  {
-    id: 'coupon-2',
-    code: 'SAVE20',
-    type: 'fixed',
-    value: 20,
-    min_purchase: 200,
-    is_active: true
-  },
-  {
-    id: 'coupon-3',
-    code: 'FREESHIP',
-    type: 'fixed',
-    value: 15, // 免运费
-    is_active: true
-  }
-];
+const mockCoupon: Coupon = {
+  id: 'coupon-1',
+  code: 'WELCOME10',
+  discount_type: 'percentage',
+  discount_value: 10,
+  min_purchase: 100,
+  start_date: new Date().toISOString(),
+  end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  is_active: true
+};
 
 interface CartItem {
   id: string;
@@ -138,9 +123,7 @@ const CartPage = () => {
     }
     
     // 查找匹配的优惠券
-    const foundCoupon = mockCoupons.find(
-      c => c.code.toUpperCase() === couponCode.toUpperCase() && c.is_active
-    );
+    const foundCoupon = mockCoupon;
     
     if (!foundCoupon) {
       setCouponMessage({
