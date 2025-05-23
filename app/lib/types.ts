@@ -1,15 +1,15 @@
 export interface Product {
-  id: string;
+  id: number;
   name: string;
   description: string;
   price: number;
-  original_price?: number;
-  category_id: string;
-  is_featured: boolean;
-  is_new: boolean;
+  category: number;
   stock_quantity: number;
-  created_at: string;
-  updated_at: string;
+  image_url?: string;
+  is_featured?: boolean;
+  original_price?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ProductImage {

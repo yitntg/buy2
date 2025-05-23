@@ -54,7 +54,7 @@ const ProductsPage = () => {
         
         // 如果选择了特定分类，添加分类过滤
         if (selectedCategory !== 'all') {
-          query = query.eq('category_id', selectedCategory);
+          query = query.eq('category', selectedCategory);
         }
         
         const { data, error } = await query;
@@ -117,7 +117,7 @@ const ProductsPage = () => {
     
     // 分类过滤（用字符串比较，防止类型不一致）
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => String(product.category_id) === String(selectedCategory));
+      filtered = filtered.filter(product => String(product.category) === String(selectedCategory));
     }
     
     // 价格区间过滤
