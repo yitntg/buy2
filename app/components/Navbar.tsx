@@ -70,13 +70,29 @@ const Navbar = () => {
     };
   }, []);
 
+  // 获取分类数据
   useEffect(() => {
     async function fetchCategories() {
-      const { data, error } = await supabase.from('categories').select('*').order('id');
-      if (!error && data) {
-        setCategories(data);
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .order('id');
+          
+        if (error) {
+          console.error('Error fetching categories:', error);
+          return;
+        }
+        
+        if (data) {
+          console.log('Fetched categories:', data);
+          setCategories(data);
+        }
+      } catch (err) {
+        console.error('Error in fetchCategories:', err);
       }
     }
+    
     fetchCategories();
   }, []);
 

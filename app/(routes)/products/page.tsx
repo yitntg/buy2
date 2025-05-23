@@ -45,21 +45,32 @@ const ProductsPage = () => {
   // 拉取真实商品数据
   useEffect(() => {
     async function fetchProducts() {
-      let query = supabase.from('products').select('*');
-      
-      // 如果选择了特定分类，添加分类过滤
-      if (selectedCategory !== 'all') {
-        query = query.eq('category_id', selectedCategory);
-      }
-      
-      const { data, error } = await query;
-      if (!error && data) {
-        setProducts(data);
+      try {
+        let query = supabase.from('products').select('*');
+        
+        // 如果选择了特定分类，添加分类过滤
+        if (selectedCategory !== 'all') {
+          query = query.eq('category_id', selectedCategory);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Error fetching products:', error);
+          return;
+        }
+        
+        if (data) {
+          console.log('Fetched products:', data);
+          setProducts(data);
+        }
+      } catch (err) {
+        console.error('Error in fetchProducts:', err);
       }
     }
     
     fetchProducts();
-  }, [selectedCategory]); // 添加 selectedCategory 作为依赖项
+  }, [selectedCategory]);
   
   // 更新URL参数
   const updateUrlParams = (category: string) => {
