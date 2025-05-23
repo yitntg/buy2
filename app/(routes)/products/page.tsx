@@ -14,7 +14,7 @@ const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   
   // 添加状态管理
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState('popularity');
@@ -38,8 +38,12 @@ const ProductsPage = () => {
   
   // 从URL参数中获取初始分类
   useEffect(() => {
-    const categoryFromUrl = searchParams.get('category') || 'all';
-    setSelectedCategory(categoryFromUrl);
+    const categoryFromUrl = searchParams.get('category');
+    if (categoryFromUrl) {
+      setSelectedCategory(Number(categoryFromUrl));
+    } else {
+      setSelectedCategory('all');
+    }
   }, [searchParams]);
   
   // 拉取真实商品数据
@@ -73,13 +77,13 @@ const ProductsPage = () => {
   }, [selectedCategory]);
   
   // 更新URL参数
-  const updateUrlParams = (category: string) => {
+  const updateUrlParams = (category: number | 'all') => {
     const params = new URLSearchParams(searchParams.toString());
     
     if (category === 'all') {
       params.delete('category');
     } else {
-      params.set('category', category);
+      params.set('category', category.toString());
     }
     
     const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -88,7 +92,7 @@ const ProductsPage = () => {
   
   // 修改分类选择处理函数
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCategory = e.target.value;
+    const newCategory = e.target.value === 'all' ? 'all' : Number(e.target.value);
     setSelectedCategory(newCategory);
     updateUrlParams(newCategory);
   };
