@@ -66,12 +66,12 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
     })
     .sort((a, b) => {
       switch (sortOrder) {
-        case 'price-asc':
+        case 'price-low':
           return a.price - b.price;
-        case 'price-desc':
+        case 'price-high':
           return b.price - a.price;
         case 'newest':
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
         default:
           return 0;
       }
@@ -203,8 +203,8 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
                 className="appearance-none px-4 py-2 pr-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 <option value="popularity">按热度</option>
-                <option value="price-asc">价格从低到高</option>
-                <option value="price-desc">价格从高到低</option>
+                <option value="price-low">价格从低到高</option>
+                <option value="price-high">价格从高到低</option>
                 <option value="newest">最新上架</option>
               </select>
               <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
