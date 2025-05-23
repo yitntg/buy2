@@ -178,7 +178,10 @@ const Navbar = () => {
                           key={category.id}
                           href={`/products?category=${category.id}`}
                           className="group block rounded-lg overflow-hidden hover:shadow-lg transition-all border border-transparent hover:border-primary-500"
-                          onClick={() => setIsProductsMenuOpen(false)}
+                          onClick={() => {
+                            setIsProductsMenuOpen(false);
+                            router.push(`/products?category=${category.id}`);
+                          }}
                         >
                           <div className="relative h-24 mb-3 rounded-lg overflow-hidden">
                             <Image
