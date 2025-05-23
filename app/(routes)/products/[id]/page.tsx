@@ -3,18 +3,20 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaHeart, FaShoppingCart, FaStar, FaShare, FaTruck, FaShieldAlt, FaCreditCard } from 'react-icons/fa';
+import { FaHeart, FaShoppingCart, FaStar, FaShare, FaTruck, FaShieldAlt, FaCreditCard, FaPlay, FaPause } from 'react-icons/fa';
 import { useCartStore, useWishlistStore } from '@/app/lib/store';
-import { Product } from '@/app/lib/types';
+import { Product, ProductImage } from '@/app/lib/types';
 import { supabase } from '@/app/lib/supabase';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const [productImages, setProductImages] = useState<string[]>([]);
+  const [productMedia, setProductMedia] = useState<ProductImage[]>([]);
   const [relatedProductImages, setRelatedProductImages] = useState<{[key: string]: string}>({});
   const [loading, setLoading] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -39,18 +41,16 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         if (productData) {
           setProduct(productData);
           
-          // 获取商品图片
-          const { data: images, error: imagesError } = await supabase
+          // 获取商品媒体（图片和视频）
+          const { data: mediaData, error: mediaError } = await supabase
             .from('product_images')
             .select('*')
             .eq('product_id', id)
             .order('sort_order', { ascending: true });
 
-          if (imagesError) throw imagesError;
-          if (images && images.length > 0) {
-            setProductImages(images.map(img => img.image_url));
-          } else {
-            setProductImages(['/no-image.png']);
+          if (mediaError) throw mediaError;
+          if (mediaData && mediaData.length > 0) {
+            setProductMedia(mediaData);
           }
 
           // 获取同分类的相关商品
@@ -93,8 +93,60 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     fetchProductData();
   }, [id]);
 
-  // 商品图片数组，优先用 productImages
-  const imagesToShow = productImages.length > 0 ? productImages : [
+  // 处理视频播放/暂停
+  const handleVideoToggle = () => {
+    const videoElement = document.getElementById('product-video') as HTMLVideoElement;
+    if (videoElement) {
+      if (isPlaying) {
+        videoElement.pause();
+      } else {
+        videoElement.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  // 渲染媒体项（图片或视频）
+  const renderMediaItem = (media: ProductImage, isMain: boolean = false) => {
+    if (media.type === 'video') {
+      return (
+        <div className="relative w-full h-full">
+          <video
+            id="product-video"
+            src={media.image_url}
+            poster={media.thumbnail_url}
+            className="w-full h-full object-cover"
+            playsInline
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+          />
+          <button
+            onClick={handleVideoToggle}
+            className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors"
+          >
+            {isPlaying ? (
+              <FaPause className="text-white text-4xl" />
+            ) : (
+              <FaPlay className="text-white text-4xl" />
+            )}
+          </button>
+        </div>
+      );
+    } else {
+      return (
+        <Image
+          src={media.image_url}
+          alt={product?.name || '商品图片'}
+          fill
+          style={{ objectFit: 'cover' }}
+          className={isMain ? "transition-all duration-300" : ""}
+        />
+      );
+    }
+  };
+
+  // 商品图片数组，优先用 productMedia
+  const imagesToShow = productMedia.length > 0 ? productMedia.map(media => media.image_url) : [
     '/no-image.png',
     '/no-image.png',
     '/no-image.png',
@@ -184,40 +236,48 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         
         {/* 产品详情 */}
         <div className="flex flex-col lg:flex-row gap-10 mb-16">
-          {/* 产品图片 */}
+          {/* 产品媒体 */}
           <div className="w-full lg:w-1/2">
             <div className="flex flex-col-reverse md:flex-row gap-4">
               {/* 缩略图 */}
               <div className="grid grid-cols-4 gap-4 mt-4">
-                {imagesToShow.map((imageUrl, index) => (
+                {productMedia.map((media, index) => (
                   <button
                     key={index}
                     className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                      activeImageIndex === index 
+                      activeMediaIndex === index 
                         ? 'border-primary-500 scale-95' 
                         : 'border-transparent hover:border-primary-300'
                     }`}
-                    onClick={() => setActiveImageIndex(index)}
+                    onClick={() => setActiveMediaIndex(index)}
                   >
-                    <Image
-                      src={imageUrl}
-                      alt={`${product.name} - 图片 ${index + 1}`}
-                      fill
-                      style={{ objectFit: 'cover' }}
-                    />
+                    {media.type === 'video' ? (
+                      <Image
+                        src={media.thumbnail_url || '/no-image.png'}
+                        alt={`${product?.name} - 视频预览`}
+                        fill
+                        style={{ objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <Image
+                        src={media.image_url}
+                        alt={`${product?.name} - 图片 ${index + 1}`}
+                        fill
+                        style={{ objectFit: 'cover' }}
+                      />
+                    )}
+                    {media.type === 'video' && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <FaPlay className="text-white text-xl" />
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
               
-              {/* 主图 */}
+              {/* 主媒体展示 */}
               <div className="relative h-[500px] md:flex-1 glass-card rounded-xl overflow-hidden">
-                <Image
-                  src={imagesToShow[activeImageIndex]}
-                  alt={product.name}
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  className="transition-all duration-300"
-                />
+                {productMedia[activeMediaIndex] && renderMediaItem(productMedia[activeMediaIndex], true)}
                 {product.is_new && (
                   <div className="absolute top-3 left-3 z-10">
                     <span className="px-3 py-1 bg-secondary-500 text-white text-sm font-medium rounded-full">
@@ -432,7 +492,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                   <div className="relative h-64 rounded-xl overflow-hidden">
                     <Image 
-                      src={productImages[0] || '/no-image.png'}
+                      src={productMedia[0]?.image_url || '/no-image.png'}
                       alt="Product detail 1"
                       fill
                       style={{ objectFit: 'cover' }}
@@ -440,7 +500,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                   </div>
                   <div className="relative h-64 rounded-xl overflow-hidden">
                     <Image 
-                      src={productImages[1] || '/no-image.png'}
+                      src={productMedia[1]?.image_url || '/no-image.png'}
                       alt="Product detail 2"
                       fill
                       style={{ objectFit: 'cover' }}

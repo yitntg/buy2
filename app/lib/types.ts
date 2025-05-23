@@ -16,6 +16,12 @@ export interface ProductImage {
   id: string;
   product_id: string;
   image_url: string;
+  type?: 'image' | 'video';  // 媒体类型
+  format?: string;  // 文件格式，如jpg、png、mp4等
+  width?: number;
+  height?: number;
+  duration?: number;  // 视频时长（秒）
+  thumbnail_url?: string;  // 视频缩略图
   sort_order: number;
   created_at: string;
 }
