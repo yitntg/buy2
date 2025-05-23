@@ -25,7 +25,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const { addToCart } = useCartStore();
   const { addToWishlist, removeFromWishlist, items: wishlistItems } = useWishlistStore();
   
-  const isInWishlist = wishlistItems.some(item => item.id === product?.id);
+  const isInWishlist = wishlistItems.some(item => item.product_id === product?.id);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -162,7 +162,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const handleWishlistToggle = () => {
     if (!product) return;
     if (isInWishlist) {
-      removeFromWishlist(product.id.toString());
+      removeFromWishlist(product.id);
     } else {
       addToWishlist(product);
     }
