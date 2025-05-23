@@ -46,7 +46,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isInWishlist) {
-      removeFromWishlist(product.id);
+      removeFromWishlist(product.id.toString());
     } else {
       addToWishlist(product);
     }
@@ -76,13 +76,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
               <FaHeart className={`${isInWishlist ? 'text-red-500' : 'text-white'}`} />
             </button>
           </div>
-          {product.is_new && (
-            <div className="absolute top-3 left-3 z-10">
-              <span className="px-3 py-1 bg-secondary-500 text-white text-sm font-medium rounded-full">
-                新品
-              </span>
-            </div>
-          )}
           {(product.original_price && product.original_price > product.price) && (
             <div className="absolute top-3 left-3 z-10">
               <span className="px-3 py-1 bg-accent-500 text-white text-sm font-medium rounded-full">
