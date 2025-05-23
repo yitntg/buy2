@@ -27,11 +27,13 @@ export interface ProductImage {
 }
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
-  slug: string;
-  description?: string;
+  description: string;
   image_url?: string;
+  itemCount?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface User {
