@@ -27,14 +27,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
     const fetchProductImage = async () => {
       const { data, error } = await supabase
         .from('product_images')
-        .select('image_url')
+        .select('*')
         .eq('product_id', product.id)
+        .eq('type', 'image')
         .order('sort_order', { ascending: true })
         .limit(1)
         .single();
         
       if (!error && data) {
         setProductImage(data.image_url);
+      } else {
+        setProductImage('/no-image.png');
       }
     };
     
