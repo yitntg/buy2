@@ -57,7 +57,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           const { data: relatedData, error: relatedError } = await supabase
             .from('products')
             .select('*')
-            .eq('category_id', productData.category_id)
+            .eq('category', productData.category)
             .neq('id', id)
             .limit(4);
 
@@ -162,7 +162,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const handleWishlistToggle = () => {
     if (!product) return;
     if (isInWishlist) {
-      removeFromWishlist(product.id);
+      removeFromWishlist(product.id.toString());
     } else {
       addToWishlist(product);
     }
@@ -221,10 +221,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <li className="flex items-center space-x-2">
               <span className="text-gray-400">/</span>
               <Link 
-                href={`/categories/${product.category_id}`} 
+                href={`/categories/${product.category}`} 
                 className="text-gray-500 hover:text-primary-500 transition-colors"
               >
-                {product.category_id}
+                {product.category}
               </Link>
             </li>
             <li className="flex items-center space-x-2">
@@ -278,20 +278,6 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               {/* 主媒体展示 */}
               <div className="relative h-[500px] md:flex-1 glass-card rounded-xl overflow-hidden">
                 {productMedia[activeMediaIndex] && renderMediaItem(productMedia[activeMediaIndex], true)}
-                {product.is_new && (
-                  <div className="absolute top-3 left-3 z-10">
-                    <span className="px-3 py-1 bg-secondary-500 text-white text-sm font-medium rounded-full">
-                      新品
-                    </span>
-                  </div>
-                )}
-                {(product.original_price && product.original_price > product.price) && (
-                  <div className="absolute top-3 right-3 z-10">
-                    <span className="px-3 py-1 bg-accent-500 text-white text-sm font-medium rounded-full">
-                      优惠 {Math.round((1 - product.price / product.original_price) * 100)}%
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -422,7 +408,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 商品编号: {product.id}
               </span>
               <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full">
-                分类: {product.category_id}
+                分类: {product.category}
               </span>
               <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full">
                 标签: 时尚, 新品
@@ -656,13 +642,6 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                       style={{ objectFit: 'cover' }}
                       className="transition-all duration-300 group-hover:scale-110"
                     />
-                    {product.is_new && (
-                      <div className="absolute top-2 left-2">
-                        <span className="px-2 py-1 bg-secondary-500 text-white text-sm font-medium rounded-full">
-                          新品
-                        </span>
-                      </div>
-                    )}
                   </div>
                   <h3 className="font-medium group-hover:text-primary-500 transition-colors">
                     {product.name}
