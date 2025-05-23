@@ -8,21 +8,34 @@ import ProductCard from '@/app/components/ProductCard';
 import { supabase } from '@/app/lib/supabase';
 import { Product, Category } from '@/app/lib/types';
 
-const ProductsPage = () => {
+interface Filters {
+  inStock: boolean;
+  onSale: boolean;
+  priceRange: {
+    min: number;
+    max: number;
+  };
+}
+
+export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
+  const [filters, setFilters] = useState<Filters>({
+    inStock: false,
+    onSale: false,
+    priceRange: {
+      min: 0,
+      max: 0
+    }
+  });
   
   // 添加状态管理
-  const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState('popularity');
-  const [filters, setFilters] = useState({
-    inStock: false,
-    featured: false,
-    onSale: false
-  });
   
   const [categories, setCategories] = useState<Category[]>([]);
   
@@ -40,7 +53,7 @@ const ProductsPage = () => {
   useEffect(() => {
     const categoryFromUrl = searchParams.get('category');
     if (categoryFromUrl) {
-      setSelectedCategory(Number(categoryFromUrl));
+      setSelectedCategory(parseInt(categoryFromUrl));
     } else {
       setSelectedCategory('all');
     }
@@ -86,13 +99,12 @@ const ProductsPage = () => {
       params.set('category', category.toString());
     }
     
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
-    router.push(newUrl, { scroll: false });
+    router.push(`/products?${params.toString()}`);
   };
   
   // 修改分类选择处理函数
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCategory = e.target.value === 'all' ? 'all' : Number(e.target.value);
+    const newCategory = e.target.value === 'all' ? 'all' : parseInt(e.target.value);
     setSelectedCategory(newCategory);
     updateUrlParams(newCategory);
   };
@@ -103,62 +115,64 @@ const ProductsPage = () => {
     setPriceRange({ min: '', max: '' });
     setFilters({
       inStock: false,
-      featured: false,
-      onSale: false
+      onSale: false,
+      priceRange: {
+        min: 0,
+        max: 0
+      }
     });
     
     // 重置URL参数
     router.push('/products', { scroll: false });
   };
   
-  // 过滤并排序产品
-  const filteredProducts = () => {
-    let filtered = [...products];
-    
-    // 分类过滤（用字符串比较，防止类型不一致）
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => String(product.category) === String(selectedCategory));
-    }
-    
-    // 价格区间过滤
-    if (priceRange.min && priceRange.max) {
-      filtered = filtered.filter(
-        product => product.price >= Number(priceRange.min) && product.price <= Number(priceRange.max)
-      );
-    } else if (priceRange.min) {
-      filtered = filtered.filter(product => product.price >= Number(priceRange.min));
-    } else if (priceRange.max) {
-      filtered = filtered.filter(product => product.price <= Number(priceRange.max));
-    }
-    
-    // 库存过滤
-    if (filters.inStock) {
-      filtered = filtered.filter(product => product.stock_quantity > 0);
-    }
-    
-    // 特色商品过滤
-    if (filters.featured) {
-      filtered = filtered.filter(product => product.is_featured);
-    }
-    
-    // 优惠商品过滤
-    if (filters.onSale) {
-      filtered = filtered.filter(product => product.original_price);
-    }
-    
-    // 应用排序
-    if (sortOrder === 'price-low') {
-      filtered.sort((a, b) => a.price - b.price);
-    } else if (sortOrder === 'price-high') {
-      filtered.sort((a, b) => b.price - a.price);
-    } else if (sortOrder === 'newest') {
-      filtered.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
-    }
-    
-    return filtered;
-  };
+  // 过滤和排序商品
+  const filteredAndSortedProducts = products
+    .filter(product => {
+      // 分类过滤
+      if (selectedCategory !== 'all') {
+        return product.category === selectedCategory;
+      }
+      return true;
+    })
+    .filter(product => {
+      // 库存过滤
+      if (filters.inStock) {
+        return product.stock_quantity > 0;
+      }
+      return true;
+    })
+    .filter(product => {
+      // 优惠商品过滤
+      if (filters.onSale) {
+        return product.original_price && product.original_price > product.price;
+      }
+      return true;
+    })
+    .filter(product => {
+      // 价格范围过滤
+      if (filters.priceRange.min && product.price < filters.priceRange.min) {
+        return false;
+      }
+      if (filters.priceRange.max && product.price > filters.priceRange.max) {
+        return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortOrder) {
+        case 'price-low':
+          return a.price - b.price;
+        case 'price-high':
+          return b.price - a.price;
+        case 'newest':
+          return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
+        default:
+          return 0;
+      }
+    });
   
-  const displayProducts = filteredProducts();
+  const displayProducts = filteredAndSortedProducts;
   
   return (
     <main className="min-h-screen">
@@ -211,12 +225,6 @@ const ProductsPage = () => {
                 onClick={() => setFilters({...filters, inStock: !filters.inStock})}
               >
                 有货
-              </button>
-              <button 
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${filters.featured ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
-                onClick={() => setFilters({...filters, featured: !filters.featured})}
-              >
-                特色商品
               </button>
               <button 
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${filters.onSale ? 'bg-primary-500 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-700 dark:text-gray-200'}`}
@@ -291,7 +299,7 @@ const ProductsPage = () => {
             </div>
             
             {/* 激活的过滤条件展示 */}
-            {(selectedCategory !== 'all' || filters.inStock || filters.featured || filters.onSale || priceRange.min || priceRange.max) && (
+            {(selectedCategory !== 'all' || filters.inStock || filters.onSale || priceRange.min || priceRange.max) && (
               <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400">已选条件:</span>
@@ -314,18 +322,6 @@ const ProductsPage = () => {
                       <button 
                         className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setFilters({...filters, inStock: false})}
-                      >
-                        <FaTimes size={12} />
-                      </button>
-                    </span>
-                  )}
-                  
-                  {filters.featured && (
-                    <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
-                      特色商品
-                      <button 
-                        className="ml-2 text-primary-400 hover:text-primary-600"
-                        onClick={() => setFilters({...filters, featured: false})}
                       >
                         <FaTimes size={12} />
                       </button>
@@ -417,6 +413,4 @@ const ProductsPage = () => {
       </section>
     </main>
   );
-}
-
-export default ProductsPage; 
+} 
