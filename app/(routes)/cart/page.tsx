@@ -11,25 +11,27 @@ import { useAuth } from '@/app/contexts/AuthContext';
 
 // 模拟优惠券数据库，实际应从API获取
 const mockCoupon: Coupon = {
-  id: 'coupon-1',
+  id: 1,
   code: 'WELCOME10',
   discount_type: 'percentage',
   discount_value: 10,
   min_purchase: 100,
-  start_date: new Date().toISOString(),
-  end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-  is_active: true
+  start_date: new Date(),
+  end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  is_active: true,
+  created_at: new Date(),
+  updated_at: new Date()
 };
 
 interface CartItem {
-  id: string;
+  id: number;
   product: Product;
   quantity: number;
   productImage?: string;
 }
 
 interface StoreCartItem {
-  id: string;
+  id: number;
   product: Product;
   quantity: number;
 }
@@ -250,14 +252,14 @@ const CartPage = () => {
                     <div className="flex items-center gap-4 mt-2">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleQuantityChange(item.product.id.toString(), Math.max(0, item.quantity - 1))}
+                          onClick={() => handleQuantityChange(item.product.id, Math.max(0, item.quantity - 1))}
                           className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
                         >
                           <FaMinus className="text-sm" />
                         </button>
                         <span className="w-8 text-center">{item.quantity}</span>
                         <button
-                          onClick={() => handleQuantityChange(item.product.id.toString(), item.quantity + 1)}
+                          onClick={() => handleQuantityChange(item.product.id, item.quantity + 1)}
                           className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
                         >
                           <FaPlus className="text-sm" />
