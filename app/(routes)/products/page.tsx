@@ -17,12 +17,15 @@ interface Filters {
   };
 }
 
-export default function ProductsPage() {
+const ProductsPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState('popularity');
   const [filters, setFilters] = useState<Filters>({
     inStock: false,
     onSale: false,
@@ -31,11 +34,6 @@ export default function ProductsPage() {
       max: 0
     }
   });
-  
-  // 添加状态管理
-  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
-  const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
-  const [sortOrder, setSortOrder] = useState('popularity');
   
   const [categories, setCategories] = useState<Category[]>([]);
   
@@ -53,7 +51,7 @@ export default function ProductsPage() {
   useEffect(() => {
     const categoryFromUrl = searchParams.get('category');
     if (categoryFromUrl) {
-      setSelectedCategory(parseInt(categoryFromUrl));
+      setSelectedCategory(parseInt(categoryFromUrl) as number);
     } else {
       setSelectedCategory('all');
     }
@@ -63,11 +61,18 @@ export default function ProductsPage() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        let query = supabase.from('products').select('*');
+        let query = supabase.from('products').select(`
+          *,
+          categories (
+            id,
+            name,
+            description
+          )
+        `);
         
         // 如果选择了特定分类，添加分类过滤
         if (selectedCategory !== 'all') {
-          query = query.eq('category', selectedCategory);
+          query = query.eq('category_id', selectedCategory);
         }
         
         const { data, error } = await query;
@@ -104,7 +109,7 @@ export default function ProductsPage() {
   
   // 修改分类选择处理函数
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCategory = e.target.value === 'all' ? 'all' : parseInt(e.target.value);
+    const newCategory = e.target.value === 'all' ? 'all' : parseInt(e.target.value) as number;
     setSelectedCategory(newCategory);
     updateUrlParams(newCategory);
   };
@@ -127,52 +132,49 @@ export default function ProductsPage() {
   };
   
   // 过滤和排序商品
-  const filteredAndSortedProducts = products
-    .filter(product => {
-      // 分类过滤
-      if (selectedCategory !== 'all') {
-        return product.category === selectedCategory;
-      }
-      return true;
-    })
-    .filter(product => {
-      // 库存过滤
-      if (filters.inStock) {
-        return product.stock_quantity > 0;
-      }
-      return true;
-    })
-    .filter(product => {
-      // 优惠商品过滤
-      if (filters.onSale) {
-        return product.original_price && product.original_price > product.price;
-      }
-      return true;
-    })
-    .filter(product => {
-      // 价格范围过滤
-      if (filters.priceRange.min && product.price < filters.priceRange.min) {
-        return false;
-      }
-      if (filters.priceRange.max && product.price > filters.priceRange.max) {
-        return false;
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      switch (sortOrder) {
-        case 'price-low':
-          return a.price - b.price;
-        case 'price-high':
-          return b.price - a.price;
-        case 'newest':
-          return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
-        default:
-          return 0;
-      }
-    });
+  const applyFilters = (products: Product[]) => {
+    let filtered = [...products];
+
+    // 分类过滤
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(product => product.category_id === (selectedCategory as number));
+    }
+
+    // 库存过滤
+    if (filters.inStock) {
+      filtered = filtered.filter(product => product.stock_quantity > 0);
+    }
+
+    // 优惠商品过滤
+    if (filters.onSale) {
+      filtered = filtered.filter(product => product.original_price && product.original_price > product.price);
+    }
+
+    // 价格范围过滤
+    if (filters.priceRange.min) {
+      filtered = filtered.filter(product => product.price >= filters.priceRange.min);
+    }
+    if (filters.priceRange.max) {
+      filtered = filtered.filter(product => product.price <= filters.priceRange.max);
+    }
+
+    // 排序
+    if (sortOrder === 'price-low') {
+      filtered.sort((a, b) => a.price - b.price);
+    } else if (sortOrder === 'price-high') {
+      filtered.sort((a, b) => b.price - a.price);
+    } else if (sortOrder === 'newest') {
+      filtered.sort((a, b) => {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return dateB - dateA;
+      });
+    }
+
+    return filtered;
+  };
   
-  const displayProducts = filteredAndSortedProducts;
+  const displayProducts = applyFilters(products);
   
   return (
     <main className="min-h-screen">

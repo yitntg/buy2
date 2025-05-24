@@ -5,7 +5,7 @@ export interface Product {
   price: number;
   original_price?: number;
   stock_quantity: number;
-  category: number;
+  category_id: number;
   created_at?: string;
   updated_at?: string;
 }
