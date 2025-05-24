@@ -12,31 +12,31 @@ import { supabase } from '@/app/lib/supabase';
 // 模拟支付方式
 const paymentMethods: PaymentMethod[] = [
   {
-    id: 'airwallex',
+    id: 1,
     name: 'Airwallex支付',
     icon: 'A',
     description: '使用Airwallex安全支付（推荐）'
   },
   {
-    id: 'alipay',
+    id: 2,
     name: '支付宝',
     icon: '支',
     description: '使用支付宝安全支付'
   },
   {
-    id: 'wechat',
+    id: 3,
     name: '微信支付',
     icon: '微',
     description: '使用微信支付'
   },
   {
-    id: 'unionpay',
+    id: 4,
     name: '银联',
     icon: '银',
     description: '使用银联卡支付'
   },
   {
-    id: 'cod',
+    id: 5,
     name: '货到付款',
     icon: '货',
     description: '送货上门时付款'
@@ -46,8 +46,8 @@ const paymentMethods: PaymentMethod[] = [
 // 模拟保存的收货地址
 const savedAddresses: Address[] = [
   {
-    id: 'addr-1',
-    user_id: 'test-user-id',
+    id: 1,
+    user_id: 1,
     full_name: '张三',
     phone: '13800138000',
     province: '广东省',
@@ -58,8 +58,8 @@ const savedAddresses: Address[] = [
     is_default: true
   },
   {
-    id: 'addr-2',
-    user_id: 'test-user-id',
+    id: 2,
+    user_id: 1,
     full_name: '李四',
     phone: '13900139000',
     province: '北京市',
@@ -77,7 +77,7 @@ const CheckoutPage = () => {
   const { subtotal, discount, shipping, total } = getCartTotal();
   
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<number | null>(null);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -146,8 +146,8 @@ const CheckoutPage = () => {
     // 实际应用中，这里应该发送请求到服务器保存地址
     // 模拟保存新地址
     const newSavedAddress: Address = {
-      id: `addr-${Date.now()}`,
-      user_id: 'test-user-id',
+      id: Date.now(),
+      user_id: 1,
       ...newAddress
     };
     
@@ -171,7 +171,7 @@ const CheckoutPage = () => {
       setOrderId(newOrderId);
       
       // 根据支付方式进行不同处理
-      if (selectedPaymentMethod === 'airwallex') {
+      if (selectedPaymentMethod === 1) {
         // 使用Airwallex支付，跳转到支付页面
         router.push(`/payment?orderId=${newOrderId}&amount=${total}&currency=CNY`);
       } else {
@@ -404,7 +404,7 @@ const CheckoutPage = () => {
                   <div 
                     key={method.id}
                     className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                      selectedPaymentMethod === method.id 
+                      selectedPaymentMethod === method.id
                         ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' 
                         : 'border-gray-200 dark:border-gray-700 hover:border-primary-300'
                     }`}
