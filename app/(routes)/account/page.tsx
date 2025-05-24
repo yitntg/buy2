@@ -206,7 +206,13 @@ export default function AccountPage() {
                             {orders.slice(0, 3).map((order) => (
                               <tr key={order.id} className="border-b border-gray-200 dark:border-gray-700">
                                 <td className="py-4 text-sm font-medium">{order.id}</td>
-                                <td className="py-4 text-sm text-gray-500 dark:text-gray-400">{order.date}</td>
+                                <td className="py-4 text-sm text-gray-500 dark:text-gray-400">
+                                  {order.date.toLocaleDateString('zh-CN', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })}
+                                </td>
                                 <td className="py-4">
                                   <span className={`px-2 py-1 text-xs rounded-full ${
                                     order.status === 'delivered' 
@@ -259,7 +265,13 @@ export default function AccountPage() {
                           {orders.map((order) => (
                             <tr key={order.id} className="border-b border-gray-200 dark:border-gray-700">
                               <td className="py-4 text-sm font-medium">{order.id}</td>
-                              <td className="py-4 text-sm text-gray-500 dark:text-gray-400">{order.date}</td>
+                              <td className="py-4 text-sm text-gray-500 dark:text-gray-400">
+                                {order.date.toLocaleDateString('zh-CN', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </td>
                               <td className="py-4">
                                 <span className={`px-2 py-1 text-xs rounded-full ${
                                   order.status === 'delivered' 
