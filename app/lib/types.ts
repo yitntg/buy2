@@ -4,11 +4,10 @@ export interface Product {
   description: string;
   price: number;
   original_price?: number;
-  category: number;
   is_featured: boolean;
   is_new: boolean;
   stock_quantity: number;
-  category_id: number;
+  category: number;
   created_at?: string;
   updated_at?: string;
 }
