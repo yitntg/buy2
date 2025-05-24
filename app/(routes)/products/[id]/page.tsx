@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FaHeart, FaShoppingCart, FaStar, FaShare, FaTruck, FaShieldAlt, FaCreditCard, FaPlay, FaPause } from 'react-icons/fa';
 import { useCartStore, useWishlistStore } from '@/app/lib/store';
-import { Product, ProductImage } from '@/app/lib/types';
+import { Product, ProductImage, Category } from '@/app/lib/types';
 import { supabase } from '@/app/lib/supabase';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
@@ -26,6 +26,8 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const { addToWishlist, removeFromWishlist, items: wishlistItems } = useWishlistStore();
   
   const isInWishlist = wishlistItems.some(item => item.product_id === product?.id);
+
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -92,6 +94,16 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
     fetchProductData();
   }, [id]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase.from('categories').select('*');
+      if (!error && data) {
+        setCategories(data);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // 处理视频播放/暂停
   const handleVideoToggle = () => {
@@ -224,7 +236,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 href={`/categories/${product.category}`} 
                 className="text-gray-500 hover:text-primary-500 transition-colors"
               >
-                {product.category}
+                {categories.find(cat => cat.id === product.category)?.name || '未知分类'}
               </Link>
             </li>
             <li className="flex items-center space-x-2">
