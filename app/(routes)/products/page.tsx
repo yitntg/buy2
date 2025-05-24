@@ -88,54 +88,24 @@ const ProductsPage = () => {
     router.push('/products', { scroll: false });
   };
   
-  // 过滤并排序产品
-  const filteredProducts = () => {
-    let filtered = [...products];
-    
-    // 分类过滤（用字符串比较，防止类型不一致）
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => String(product.category_id) === String(selectedCategory));
+  // 过滤商品
+  const filteredProducts = products.filter(product => {
+    // 分类过滤
+    if (selectedCategory !== 'all' && product.category_id !== selectedCategory) {
+      return false;
     }
     
-    // 价格区间过滤
-    if (priceRange.min && priceRange.max) {
-      filtered = filtered.filter(
-        product => product.price >= Number(priceRange.min) && product.price <= Number(priceRange.max)
-      );
-    } else if (priceRange.min) {
-      filtered = filtered.filter(product => product.price >= Number(priceRange.min));
-    } else if (priceRange.max) {
-      filtered = filtered.filter(product => product.price <= Number(priceRange.max));
-    }
+    // 其他过滤条件
+    if (filters.inStock && product.stock_quantity <= 0) return false;
+    if (filters.featured && !product.is_featured) return false;
+    if (filters.onSale && (!product.original_price || product.original_price <= product.price)) return false;
+    if (priceRange.min && product.price < Number(priceRange.min)) return false;
+    if (priceRange.max && product.price > Number(priceRange.max)) return false;
     
-    // 库存过滤
-    if (filters.inStock) {
-      filtered = filtered.filter(product => product.stock_quantity > 0);
-    }
-    
-    // 特色商品过滤
-    if (filters.featured) {
-      filtered = filtered.filter(product => product.is_featured);
-    }
-    
-    // 优惠商品过滤
-    if (filters.onSale) {
-      filtered = filtered.filter(product => product.original_price);
-    }
-    
-    // 应用排序
-    if (sortOrder === 'price-low') {
-      filtered.sort((a, b) => a.price - b.price);
-    } else if (sortOrder === 'price-high') {
-      filtered.sort((a, b) => b.price - a.price);
-    } else if (sortOrder === 'newest') {
-      filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    }
-    
-    return filtered;
-  };
+    return true;
+  });
   
-  const displayProducts = filteredProducts();
+  const displayProducts = filteredProducts;
   
   return (
     <main className="min-h-screen">
