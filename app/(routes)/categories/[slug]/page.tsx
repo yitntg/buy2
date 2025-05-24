@@ -44,7 +44,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('*')
-        .eq('category_id', slug);
+        .eq('category', slug);
         
       if (!productsError && productsData) {
         setProducts(productsData);
