@@ -8,8 +8,17 @@ export interface Product {
   is_new: boolean;
   stock_quantity: number;
   category: number;
-  created_at?: string;
-  updated_at?: string;
+  inventory: number;
+  rating: number;
+  reviews: number;
+  created_at: Date;
+  updated_at: Date;
+  brand: string;
+  model: string;
+  specifications: string;
+  free_shipping: boolean;
+  returnable: boolean;
+  warranty: boolean;
 }
 
 export interface ProductImage {
@@ -19,16 +28,16 @@ export interface ProductImage {
   thumbnail_url?: string;
   type: 'image' | 'video';
   sort_order: number;
-  created_at?: string;
-  updated_at?: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface Category {
   id: number;
   name: string;
-  description?: string;
-  created_at?: string;
-  updated_at?: string;
+  description: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface User {
@@ -39,56 +48,56 @@ export interface User {
 }
 
 export interface CartItem {
-  id: string;
+  id: number;
   product_id: number;
   quantity: number;
-  user_id: string;
+  user_id: number;
   product: Product;
 }
 
 export interface WishlistItem {
-  id: string;
+  id: number;
   product_id: number;
-  user_id: string;
+  user_id: number;
   product: Product;
 }
 
 export interface Order {
-  id: string;
-  user_id: string;
+  id: number;
+  user_id: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   total: number;
   items: number;
-  date: string;
-  created_at: string;
-  updated_at: string;
+  date: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface OrderItem {
-  id: string;
-  order_id: string;
-  product_id: string;
+  id: number;
+  order_id: number;
+  product_id: number;
   quantity: number;
   price: number;
   product?: Product;
 }
 
 export interface Coupon {
-  id: string;
+  id: number;
   code: string;
   discount_type: 'percentage' | 'fixed';
   discount_value: number;
   min_purchase?: number;
-  start_date: string;
-  end_date: string;
+  start_date: Date;
+  end_date: Date;
   is_active: boolean;
-  created_at?: string;
-  updated_at?: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface Address {
-  id: string;
-  user_id: string;
+  id: number;
+  user_id: number;
   full_name: string;
   phone: string;
   province: string;
@@ -100,7 +109,7 @@ export interface Address {
 }
 
 export interface PaymentMethod {
-  id: string;
+  id: number;
   name: string;
   icon: string;
   description: string;
