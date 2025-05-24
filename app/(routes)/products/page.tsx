@@ -153,10 +153,10 @@ const ProductsPage = () => {
         </div>
         <div className="relative z-20 container mx-auto h-full flex flex-col justify-center px-6 md:px-10">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            我们的商品
+            精选商品
           </h1>
           <p className="text-xl text-white/90 max-w-2xl">
-            探索我们精选的商品系列，满足您的各种需求
+            发现优质好物，享受品质生活
           </p>
         </div>
       </div>
