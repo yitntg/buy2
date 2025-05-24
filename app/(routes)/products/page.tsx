@@ -96,12 +96,12 @@ const ProductsPage = () => {
   const filteredProducts = products.filter(product => {
     console.log('正在过滤商品:', {
       productId: product.id,
-      productCategoryId: product.category_id,
+      productCategory: product.category,
       selectedCategory: selectedCategory
     });
     
     // 分类过滤
-    if (selectedCategory !== 'all' && product.category_id !== selectedCategory) {
+    if (selectedCategory !== 'all' && product.category !== Number(selectedCategory)) {
       return false;
     }
     
@@ -255,7 +255,7 @@ const ProductsPage = () => {
                   
                   {selectedCategory !== 'all' && (
                     <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
-                      {categories.find(cat => cat.id === selectedCategory)?.name || '未知分类'}
+                      {categories.find(cat => cat.id === Number(selectedCategory))?.name || '未知分类'}
                       <button 
                         className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setSelectedCategory('all')}
