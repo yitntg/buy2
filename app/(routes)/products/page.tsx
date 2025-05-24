@@ -17,7 +17,7 @@ interface Filters {
   };
 }
 
-const ProductsPage = () => {
+export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
