@@ -40,6 +40,7 @@ export default function ProductsPage() {
   useEffect(() => {
     async function fetchCategories() {
       const { data, error } = await supabase.from('categories').select('*').order('id');
+      console.log('获取到的分类数据:', data);
       if (!error && data) {
         setCategories(data);
       }
@@ -49,17 +50,24 @@ export default function ProductsPage() {
   
   // 从URL参数中获取初始分类
   useEffect(() => {
+<<<<<<< HEAD
     const categoryFromUrl = searchParams.get('category');
     if (categoryFromUrl) {
       setSelectedCategory(parseInt(categoryFromUrl) as number);
     } else {
       setSelectedCategory('all');
     }
+=======
+    const categoryFromUrl = searchParams.get('category') || 'all';
+    console.log('URL中的分类参数:', categoryFromUrl);
+    setSelectedCategory(categoryFromUrl);
+>>>>>>> test-branch
   }, [searchParams]);
   
   // 拉取真实商品数据
   useEffect(() => {
     async function fetchProducts() {
+<<<<<<< HEAD
       try {
         let query = supabase.from('products').select(`
           *,
@@ -88,6 +96,12 @@ export default function ProductsPage() {
         }
       } catch (err) {
         console.error('Error in fetchProducts:', err);
+=======
+      const { data, error } = await supabase.from('products').select('*');
+      console.log('获取到的商品数据:', data);
+      if (!error && data) {
+        setProducts(data);
+>>>>>>> test-branch
       }
     }
     
@@ -109,7 +123,12 @@ export default function ProductsPage() {
   
   // 修改分类选择处理函数
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+<<<<<<< HEAD
     const newCategory = e.target.value === 'all' ? 'all' : parseInt(e.target.value) as number;
+=======
+    const newCategory = e.target.value;
+    console.log('选择的分类:', newCategory);
+>>>>>>> test-branch
     setSelectedCategory(newCategory);
     updateUrlParams(newCategory);
   };
@@ -131,6 +150,7 @@ export default function ProductsPage() {
     router.push('/products', { scroll: false });
   };
   
+<<<<<<< HEAD
   // 过滤和排序商品
   const applyFilters = (products: Product[]) => {
     let filtered = [...products];
@@ -175,6 +195,32 @@ export default function ProductsPage() {
   };
   
   const displayProducts = applyFilters(products);
+=======
+  // 过滤商品
+  const filteredProducts = products.filter(product => {
+    console.log('正在过滤商品:', {
+      productId: product.id,
+      productCategory: product.category,
+      selectedCategory: selectedCategory
+    });
+    
+    // 分类过滤
+    if (selectedCategory !== 'all' && product.category !== Number(selectedCategory)) {
+      return false;
+    }
+    
+    // 其他过滤条件
+    if (filters.inStock && product.stock_quantity <= 0) return false;
+    if (filters.featured && !product.is_featured) return false;
+    if (filters.onSale && (!product.original_price || product.original_price <= product.price)) return false;
+    if (priceRange.min && product.price < Number(priceRange.min)) return false;
+    if (priceRange.max && product.price > Number(priceRange.max)) return false;
+    
+    return true;
+  });
+  
+  const displayProducts = filteredProducts;
+>>>>>>> test-branch
   
   return (
     <main className="min-h-screen">
@@ -192,10 +238,10 @@ export default function ProductsPage() {
         </div>
         <div className="relative z-20 container mx-auto h-full flex flex-col justify-center px-6 md:px-10">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            我们的商品
+            精选商品
           </h1>
           <p className="text-xl text-white/90 max-w-2xl">
-            探索我们精选的商品系列，满足您的各种需求
+            发现优质好物，享受品质生活
           </p>
         </div>
       </div>
@@ -308,7 +354,7 @@ export default function ProductsPage() {
                   
                   {selectedCategory !== 'all' && (
                     <span className="flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm">
-                      {categories.find(cat => cat.id === selectedCategory)?.name || '未知分类'}
+                      {categories.find(cat => cat.id === Number(selectedCategory))?.name || '未知分类'}
                       <button 
                         className="ml-2 text-primary-400 hover:text-primary-600"
                         onClick={() => setSelectedCategory('all')}

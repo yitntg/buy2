@@ -4,6 +4,12 @@ export interface Product {
   description: string;
   price: number;
   original_price?: number;
+<<<<<<< HEAD
+=======
+  category: number;
+  is_featured: boolean;
+  is_new: boolean;
+>>>>>>> test-branch
   stock_quantity: number;
   category_id: number;
   created_at?: string;
