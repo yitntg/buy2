@@ -73,7 +73,7 @@ const CartPage = () => {
               .single();
 
             return {
-              id: item.id,
+              id: Number(item.id),
               product: item.product,
               quantity: item.quantity,
               productImage: imageData?.image_url || '/no-image.png'

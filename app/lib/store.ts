@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { CartItem, Product, Coupon } from './types';
+import { Product, Coupon } from './types';
 
 export interface CartItem {
-  id: string;
+  id: number;
   product_id: number;
   quantity: number;
-  user_id: string;
+  user_id: number;
   product: Product;
 }
 
@@ -66,10 +66,10 @@ export const useCartStore = create<CartStore>()(
             
             // 添加新商品
             const newItem: CartItem = {
-              id: Math.random().toString(36).substr(2, 9),
+              id: Date.now(), // 使用时间戳作为临时ID
               product_id: product.id,
               quantity,
-              user_id: 'current-user', // 这里应该使用实际的用户ID
+              user_id: 1, // 这里应该使用实际的用户ID
               product
             };
             
@@ -122,10 +122,10 @@ export const useCartStore = create<CartStore>()(
         // 根据不同优惠券类型计算折扣
         let discount = 0;
         if (coupon) {
-          if (coupon.type === 'percentage') {
-            discount = subtotal * (coupon.value / 100);
-          } else if (coupon.type === 'fixed') {
-            discount = Math.min(coupon.value, subtotal); // 不能超过小计
+          if (coupon.discount_type === 'percentage') {
+            discount = subtotal * (coupon.discount_value / 100);
+          } else if (coupon.discount_type === 'fixed') {
+            discount = Math.min(coupon.discount_value, subtotal); // 不能超过小计
           }
         }
         
