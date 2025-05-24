@@ -29,6 +29,7 @@ const ProductsPage = () => {
   useEffect(() => {
     async function fetchCategories() {
       const { data, error } = await supabase.from('categories').select('*').order('id');
+      console.log('获取到的分类数据:', data);
       if (!error && data) {
         setCategories(data);
       }
@@ -39,6 +40,7 @@ const ProductsPage = () => {
   // 从URL参数中获取初始分类
   useEffect(() => {
     const categoryFromUrl = searchParams.get('category') || 'all';
+    console.log('URL中的分类参数:', categoryFromUrl);
     setSelectedCategory(categoryFromUrl);
   }, [searchParams]);
   
@@ -46,6 +48,7 @@ const ProductsPage = () => {
   useEffect(() => {
     async function fetchProducts() {
       const { data, error } = await supabase.from('products').select('*');
+      console.log('获取到的商品数据:', data);
       if (!error && data) {
         setProducts(data);
       }
@@ -70,6 +73,7 @@ const ProductsPage = () => {
   // 修改分类选择处理函数
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCategory = e.target.value;
+    console.log('选择的分类:', newCategory);
     setSelectedCategory(newCategory);
     updateUrlParams(newCategory);
   };
@@ -90,6 +94,12 @@ const ProductsPage = () => {
   
   // 过滤商品
   const filteredProducts = products.filter(product => {
+    console.log('正在过滤商品:', {
+      productId: product.id,
+      productCategoryId: product.category_id,
+      selectedCategory: selectedCategory
+    });
+    
     // 分类过滤
     if (selectedCategory !== 'all' && product.category_id !== selectedCategory) {
       return false;
